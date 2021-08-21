@@ -1,0 +1,335 @@
+digraph schedule {
+	"fontsize"="16";
+	"fontname"="Helvetica";
+	"rankdir"="LR";
+	"nodesep"="0.05";
+	"bgcolor"="white";
+	node ["shape"="box", "margin"="0", "height"="0.4"];
+	edge ["color"="black"];
+	subgraph cluster_First {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="First";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_First ["style"="invis"]
+		"schedule_&bevy_core::time::time::time_system_0" ["label"=<time_system<BR /><FONT COLOR="red" POINT-SIZE="11">Exclusive at start</FONT>>]
+		"schedule_&bevy_app::event::Events<bevy_app::app::AppExit>::update_system_0" ["label"="Events<AppExit>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_input::keyboard::KeyboardInput>::update_system_1" ["label"="Events<KeyboardInput>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_input::mouse::MouseButtonInput>::update_system_2" ["label"="Events<MouseButtonInput>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_input::mouse::MouseMotion>::update_system_3" ["label"="Events<MouseMotion>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_input::mouse::MouseWheel>::update_system_4" ["label"="Events<MouseWheel>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_input::gamepad::GamepadEvent>::update_system_5" ["label"="Events<GamepadEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_input::gamepad::GamepadEventRaw>::update_system_6" ["label"="Events<GamepadEventRaw>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_input::touch::TouchInput>::update_system_7" ["label"="Events<TouchInput>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::WindowResized>::update_system_8" ["label"="Events<WindowResized>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::CreateWindow>::update_system_9" ["label"="Events<CreateWindow>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::WindowCreated>::update_system_10" ["label"="Events<WindowCreated>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::WindowCloseRequested>::update_system_11" ["label"="Events<WindowCloseRequested>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::CloseWindow>::update_system_12" ["label"="Events<CloseWindow>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::CursorMoved>::update_system_13" ["label"="Events<CursorMoved>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::CursorEntered>::update_system_14" ["label"="Events<CursorEntered>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::CursorLeft>::update_system_15" ["label"="Events<CursorLeft>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::ReceivedCharacter>::update_system_16" ["label"="Events<ReceivedCharacter>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::WindowFocused>::update_system_17" ["label"="Events<WindowFocused>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::WindowScaleFactorChanged>::update_system_18" ["label"="Events<WindowScaleFactorChanged>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::WindowBackendScaleFactorChanged>::update_system_19" ["label"="Events<WindowBackendScaleFactorChanged>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::FileDragAndDrop>::update_system_20" ["label"="Events<FileDragAndDrop>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_window::event::WindowMoved>::update_system_21" ["label"="Events<WindowMoved>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_scene::dynamic_scene::DynamicScene>>::update_system_22" ["label"="Events<AssetEvent<DynamicScene>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_scene::scene::Scene>>::update_system_23" ["label"="Events<AssetEvent<Scene>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_render::mesh::mesh::Mesh>>::update_system_24" ["label"="Events<AssetEvent<Mesh>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_render::texture::texture::Texture>>::update_system_25" ["label"="Events<AssetEvent<Texture>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_render::shader::shader::Shader>>::update_system_26" ["label"="Events<AssetEvent<Shader>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_render::pipeline::pipeline::PipelineDescriptor>>::update_system_27" ["label"="Events<AssetEvent<PipelineDescriptor>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_sprite::color_material::ColorMaterial>>::update_system_28" ["label"="Events<AssetEvent<ColorMaterial>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_sprite::texture_atlas::TextureAtlas>>::update_system_29" ["label"="Events<AssetEvent<TextureAtlas>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_pbr::material::StandardMaterial>>::update_system_30" ["label"="Events<AssetEvent<StandardMaterial>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_text::font::Font>>::update_system_31" ["label"="Events<AssetEvent<Font>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_text::font_atlas_set::FontAtlasSet>>::update_system_32" ["label"="Events<AssetEvent<FontAtlasSet>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_audio::audio_source::AudioSource>>::update_system_33" ["label"="Events<AssetEvent<AudioSource>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_gltf::Gltf>>::update_system_34" ["label"="Events<AssetEvent<Gltf>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_gltf::GltfNode>>::update_system_35" ["label"="Events<AssetEvent<GltfNode>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_gltf::GltfPrimitive>>::update_system_36" ["label"="Events<AssetEvent<GltfPrimitive>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_gltf::GltfMesh>>::update_system_37" ["label"="Events<AssetEvent<GltfMesh>>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bevy_prototype_debug_lines::LineShader>>::update_system_38" ["label"="Events<AssetEvent<LineShader>>update_system"]
+		"schedule_&bevy_app::event::Events<bug_game::credits::CreditsEvent>::update_system_39" ["label"="Events<CreditsEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bug_game::holdable::LiftHoldableEvent>::update_system_40" ["label"="Events<LiftHoldableEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bug_game::level::PositionChangeEvent>::update_system_41" ["label"="Events<PositionChangeEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bug_game::level_over::LevelOverEvent>::update_system_42" ["label"="Events<LevelOverEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bug_game::snake::AddBodyPartEvent>::update_system_43" ["label"="Events<AddBodyPartEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bug_game::snake::KillSnakeEvent>::update_system_44" ["label"="Events<KillSnakeEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bug_game::dude::KillDudeEvent>::update_system_45" ["label"="Events<KillDudeEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bug_game::food::FoodEatenEvent>::update_system_46" ["label"="Events<FoodEatenEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bug_game::level::NextLevelEvent>::update_system_47" ["label"="Events<NextLevelEvent>update_system"]
+		"schedule_&bevy_app::event::Events<bevy_asset::assets::AssetEvent<bug_game::level::LevelsAsset>>::update_system_48" ["label"="Events<AssetEvent<LevelsAsset>>update_system"]
+	}
+	
+	subgraph cluster_LoadAssets {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="LoadAssets";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_LoadAssets ["style"="invis"]
+		"schedule_&bevy_asset::io::file_asset_io::filesystem_watcher_system_0" ["label"="filesystem_watcher_system"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_scene::dynamic_scene::DynamicScene>_1" ["label"="update_asset_storage_system<DynamicScene>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_scene::scene::Scene>_2" ["label"="update_asset_storage_system<Scene>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_render::mesh::mesh::Mesh>_3" ["label"="update_asset_storage_system<Mesh>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_render::texture::texture::Texture>_4" ["label"="update_asset_storage_system<Texture>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_render::shader::shader::Shader>_5" ["label"="update_asset_storage_system<Shader>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_render::pipeline::pipeline::PipelineDescriptor>_6" ["label"="update_asset_storage_system<PipelineDescriptor>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_sprite::color_material::ColorMaterial>_7" ["label"="update_asset_storage_system<ColorMaterial>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_sprite::texture_atlas::TextureAtlas>_8" ["label"="update_asset_storage_system<TextureAtlas>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_pbr::material::StandardMaterial>_9" ["label"="update_asset_storage_system<StandardMaterial>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_text::font::Font>_10" ["label"="update_asset_storage_system<Font>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_text::font_atlas_set::FontAtlasSet>_11" ["label"="update_asset_storage_system<FontAtlasSet>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_audio::audio_source::AudioSource>_12" ["label"="update_asset_storage_system<AudioSource>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_gltf::Gltf>_13" ["label"="update_asset_storage_system<Gltf>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_gltf::GltfNode>_14" ["label"="update_asset_storage_system<GltfNode>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_gltf::GltfPrimitive>_15" ["label"="update_asset_storage_system<GltfPrimitive>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_gltf::GltfMesh>_16" ["label"="update_asset_storage_system<GltfMesh>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bevy_prototype_debug_lines::LineShader>_17" ["label"="update_asset_storage_system<LineShader>"]
+		"schedule_&bevy_asset::loader::update_asset_storage_system<bug_game::level::LevelsAsset>_18" ["label"="update_asset_storage_system<LevelsAsset>"]
+	}
+	
+	subgraph cluster_PreUpdate {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="PreUpdate";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_PreUpdate ["style"="invis"]
+		"schedule_bevy_gilrs::gilrs_system::gilrs_event_system_0" ["label"=<gilrs_event_system<BR /><FONT COLOR="red" POINT-SIZE="11">Exclusive at start</FONT>>]
+		"schedule_&bevy_input::keyboard::keyboard_input_system_0" ["label"="keyboard_input_system"]
+		"schedule_&bevy_input::mouse::mouse_button_input_system_1" ["label"="mouse_button_input_system"]
+		"schedule_&bevy_input::gamepad::gamepad_event_system_2" ["label"="gamepad_event_system"]
+		"schedule_&bevy_input::touch::touch_screen_input_system_3" ["label"="touch_screen_input_system"]
+		"schedule_&bevy_asset::asset_server::free_unused_assets_system_4" ["label"="free_unused_assets_system"]
+		"schedule_&bevy_render::draw::clear_draw_system_5" ["label"="clear_draw_system"]
+		"schedule_&bevy_ui::focus::ui_focus_system_6" ["label"="ui_focus_system"]
+		"schedule_&bevy_input::keyboard::keyboard_input_system_0" -> "schedule_&bevy_ui::focus::ui_focus_system_6" ["constraint"="false"]
+		"schedule_&bevy_input::mouse::mouse_button_input_system_1" -> "schedule_&bevy_ui::focus::ui_focus_system_6" ["constraint"="false"]
+		"schedule_&bevy_input::gamepad::gamepad_event_system_2" -> "schedule_&bevy_ui::focus::ui_focus_system_6" ["constraint"="false"]
+		"schedule_&bevy_input::touch::touch_screen_input_system_3" -> "schedule_&bevy_ui::focus::ui_focus_system_6" ["constraint"="false"]
+		"schedule_bevy_scene::scene_spawner::scene_spawner_system_0" ["label"=<scene_spawner_system<BR /><FONT COLOR="red" POINT-SIZE="11">Exclusive at end</FONT>>]
+	}
+	
+	subgraph cluster_Update {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="Update";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_Update ["style"="invis"]
+		"schedule_&bevy_window::system::exit_on_window_close_system_0" ["label"="exit_on_window_close_system"]
+		"schedule_&bevy_prototype_debug_lines::draw_lines_1" ["label"="draw_lines"]
+		"schedule_&bug_game::menu::setup_menu_2" ["label"="setup_menu"]
+		"schedule_&bug_game::menu::menu_3" ["label"="menu"]
+		"schedule_&bug_game::menu::cleanup_menu_4" ["label"="cleanup_menu"]
+		"schedule_&bug_game::environment::cleanup_change_level_screen_5" ["label"="cleanup_change_level_screen"]
+		"schedule_&bug_game::credits::setup_credits_6" ["label"="setup_credits"]
+		"schedule_&bug_game::credits::update_credits_7" ["label"="update_credits"]
+		"schedule_&bug_game::credits::show_credits_8" ["label"="show_credits"]
+		"schedule_&bug_game::environment::cleanup_environment_9" ["label"="cleanup_environment"]
+		"schedule_&bug_game::camera::create_camera_10" ["label"="create_camera"]
+		"schedule_&bug_game::camera::destroy_camera_11" ["label"="destroy_camera"]
+		"schedule_&bug_game::camera::create_camera_12" ["label"="create_camera"]
+		"schedule_&bug_game::camera::toggle_fly_13" ["label"="toggle_fly"]
+		"schedule_&bug_game::camera::fly_camera::camera_movement_system_14" ["label"="camera_movement_system"]
+		"schedule_&bug_game::camera::fly_camera::camera_2d_movement_system_15" ["label"="camera_2d_movement_system"]
+		"schedule_&bug_game::camera::fly_camera::mouse_motion_system_16" ["label"="mouse_motion_system"]
+		"schedule_&bug_game::camera::update_camera_17" ["label"="update_camera"]
+		"schedule_&bug_game::environment::load_assets_18" ["label"="load_assets"]
+		"schedule_&bug_game::environment::check_assets_ready_19" ["label"="check_assets_ready"]
+		"schedule_&bug_game::environment::change_level_screen_20" ["label"="change_level_screen"]
+		"schedule_&bug_game::environment::cleanup_change_level_screen_21" ["label"="cleanup_change_level_screen"]
+		"schedule_&bug_game::environment::cleanup_change_level_screen_22" ["label"="cleanup_change_level_screen"]
+		"schedule_&bug_game::camera::handle_player_death_23" ["label"="handle_player_death"]
+		"schedule_&bug_game::environment::load_level_24" ["label"="load_level"]
+		"schedule_&bug_game::level_over::setup_level_over_screen_25" ["label"="setup_level_over_screen"]
+		"schedule_&bug_game::holdable::lift_holdable_26" ["label"="lift_holdable"]
+		"schedule_&bug_game::holdable::update_held_27" ["label"="update_held"]
+		"schedule_&bug_game::holdable::update_held_27" -> "schedule_&bug_game::holdable::lift_holdable_26" ["constraint"="false"]
+		"schedule_&bug_game::moveable::update_moveable_28" ["label"="update_moveable"]
+		"schedule_&bug_game::win_flag::update_flag_29" ["label"="update_flag"]
+		"schedule_&bug_game::collectable::check_collected_30" ["label"="check_collected"]
+		"schedule_&bug_game::environment::update_hud_text_position_31" ["label"="update_hud_text_position"]
+		"schedule_&bug_game::level_over::level_over_check_32" ["label"="level_over_check"]
+		"schedule_&bug_game::path_find::show_path_33" ["label"="show_path"]
+		"schedule_&bug_game::snake::update_enemy_34" ["label"="update_enemy"]
+		"schedule_&bug_game::snake::handle_food_eaten_35" ["label"="handle_food_eaten"]
+		"schedule_&bug_game::score::handle_food_eaten_36" ["label"="handle_food_eaten"]
+		"schedule_&bug_game::food::animate_food_37" ["label"="animate_food"]
+		"schedule_&bug_game::food::update_food_38" ["label"="update_food"]
+		"schedule_&bug_game::environment::hide_blocks_39" ["label"="hide_blocks"]
+		"schedule_&bug_game::snake::add_body_parts_40" ["label"="add_body_parts"]
+		"schedule_&bug_game::snake::update_following_41" ["label"="update_following"]
+		"schedule_&bug_game::snake::handle_kill_snake_42" ["label"="handle_kill_snake"]
+		"schedule_&bug_game::camera::handle_player_death_43" ["label"="handle_player_death"]
+		"schedule_&bug_game::dude::handle_kill_dude_44" ["label"="handle_kill_dude"]
+		"schedule_&bug_game::path_find::update_graph_45" ["label"="update_graph"]
+		"schedule_&bug_game::path_find::update_path_46" ["label"="update_path"]
+		"schedule_&bug_game::path_find::update_graph_45" -> "schedule_&bug_game::path_find::update_path_46" ["constraint"="false"]
+		"schedule_&bug_game::path_find::draw_edges_47" ["label"="draw_edges"]
+		"schedule_&bug_game::level::broadcast_changes_48" ["label"="broadcast_changes"]
+		"schedule_&bug_game::moveable::update_moveable_28" -> "schedule_&bug_game::level::broadcast_changes_48" ["constraint"="false"]
+		"schedule_&bug_game::dude::player_input_49" ["label"="player_input"]
+		"schedule_&bug_game::dude::push_block_50" ["label"="push_block"]
+		"schedule_&bug_game::exit_51" ["label"="exit"]
+		"schedule_&bevy_diagnostic::frame_time_diagnostics_plugin::FrameTimeDiagnosticsPlugin::diagnostic_system_52" ["label"="diagnostic_system"]
+	}
+	
+	subgraph cluster_PostUpdate {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="PostUpdate";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_PostUpdate ["style"="invis"]
+		"schedule_bevy_audio::audio_output::play_queued_audio_system<bevy_audio::audio_source::AudioSource>_0" ["label"=<play_queued_audio_system&lt;AudioSource&gt;<BR /><FONT COLOR="red" POINT-SIZE="11">Exclusive at start</FONT>>]
+		"schedule_bevy_winit::change_window_1" ["label"=<change_window<BR /><FONT COLOR="red" POINT-SIZE="11">Exclusive at start</FONT>>]
+		"schedule_&bevy_core::label::entity_labels_system_0" ["label"="entity_labels_system"]
+		"schedule_&bevy_transform::hierarchy::hierarchy_maintenance_system::parent_update_system_1" ["label"="parent_update_system"]
+		"schedule_&bevy_transform::transform_propagate_system::transform_propagate_system_2" ["label"="transform_propagate_system"]
+		"schedule_&bevy_transform::hierarchy::hierarchy_maintenance_system::parent_update_system_1" -> "schedule_&bevy_transform::transform_propagate_system::transform_propagate_system_2" ["constraint"="false"]
+		"schedule_&bevy_render::camera::active_cameras::active_cameras_system_3" ["label"="active_cameras_system"]
+		"schedule_&bevy_render::camera::camera::camera_system<bevy_render::camera::projection::OrthographicProjection>_4" ["label"="camera_system<OrthographicProjection>"]
+		"schedule_&bevy_render::camera::camera::camera_system<bevy_render::camera::projection::OrthographicProjection>_4" -> "schedule_&bevy_render::camera::visible_entities::visible_entities_system_6" ["constraint"="false"]
+		"schedule_&bevy_render::camera::camera::camera_system<bevy_render::camera::projection::PerspectiveProjection>_5" ["label"="camera_system<PerspectiveProjection>"]
+		"schedule_&bevy_render::camera::camera::camera_system<bevy_render::camera::projection::PerspectiveProjection>_5" -> "schedule_&bevy_render::camera::visible_entities::visible_entities_system_6" ["constraint"="false"]
+		"schedule_&bevy_render::camera::visible_entities::visible_entities_system_6" ["label"="visible_entities_system"]
+		"schedule_&bevy_transform::transform_propagate_system::transform_propagate_system_2" -> "schedule_&bevy_render::camera::visible_entities::visible_entities_system_6" ["constraint"="false"]
+		"schedule_&bevy_sprite::sprite::sprite_system_7" ["label"="sprite_system"]
+		"schedule_&bevy_sprite::color_material::material_texture_detection_system_8" ["label"="material_texture_detection_system"]
+		"schedule_&bevy_render::shader::shader_defs::asset_shader_defs_system<bevy_sprite::color_material::ColorMaterial>_9" ["label"="asset_shader_defs_system<ColorMaterial>"]
+		"schedule_&bevy_render::shader::shader_defs::asset_shader_defs_system<bevy_pbr::material::StandardMaterial>_10" ["label"="asset_shader_defs_system<StandardMaterial>"]
+		"schedule_&bevy_ui::widget::text::text_system_11" ["label"="text_system"]
+		"schedule_&bevy_ui::widget::text::text_system_11" -> "schedule_&bevy_ui::flex::flex_node_system_13" ["constraint"="false"]
+		"schedule_&bevy_ui::widget::image::image_node_system_12" ["label"="image_node_system"]
+		"schedule_&bevy_ui::widget::image::image_node_system_12" -> "schedule_&bevy_ui::flex::flex_node_system_13" ["constraint"="false"]
+		"schedule_&bevy_ui::flex::flex_node_system_13" ["label"="flex_node_system"]
+		"schedule_&bevy_ui::flex::flex_node_system_13" -> "schedule_&bevy_transform::transform_propagate_system::transform_propagate_system_2" ["constraint"="false"]
+		"schedule_&bevy_ui::update::ui_z_system_14" ["label"="ui_z_system"]
+		"schedule_&bevy_ui::update::ui_z_system_14" -> "schedule_&bevy_transform::transform_propagate_system::transform_propagate_system_2" ["constraint"="false"]
+		"schedule_&bevy_ui::flex::flex_node_system_13" -> "schedule_&bevy_ui::update::ui_z_system_14" ["constraint"="false"]
+		"schedule_&bevy_text::text2d::text2d_system_15" ["label"="text2d_system"]
+		"schedule_&bevy_diagnostic::log_diagnostics_plugin::LogDiagnosticsPlugin::log_diagnostics_system_16" ["label"="log_diagnostics_system"]
+	}
+	
+	subgraph cluster_AssetEvents {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="AssetEvents";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_AssetEvents ["style"="invis"]
+		"schedule_&bevy_asset::assets::Assets<bevy_scene::dynamic_scene::DynamicScene>::asset_event_system_0" ["label"="Assets<DynamicScene>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_scene::scene::Scene>::asset_event_system_1" ["label"="Assets<Scene>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_render::mesh::mesh::Mesh>::asset_event_system_2" ["label"="Assets<Mesh>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_render::texture::texture::Texture>::asset_event_system_3" ["label"="Assets<Texture>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_render::shader::shader::Shader>::asset_event_system_4" ["label"="Assets<Shader>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_render::pipeline::pipeline::PipelineDescriptor>::asset_event_system_5" ["label"="Assets<PipelineDescriptor>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_sprite::color_material::ColorMaterial>::asset_event_system_6" ["label"="Assets<ColorMaterial>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_sprite::texture_atlas::TextureAtlas>::asset_event_system_7" ["label"="Assets<TextureAtlas>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_pbr::material::StandardMaterial>::asset_event_system_8" ["label"="Assets<StandardMaterial>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_text::font::Font>::asset_event_system_9" ["label"="Assets<Font>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_text::font_atlas_set::FontAtlasSet>::asset_event_system_10" ["label"="Assets<FontAtlasSet>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_audio::audio_source::AudioSource>::asset_event_system_11" ["label"="Assets<AudioSource>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_gltf::Gltf>::asset_event_system_12" ["label"="Assets<Gltf>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_gltf::GltfNode>::asset_event_system_13" ["label"="Assets<GltfNode>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_gltf::GltfPrimitive>::asset_event_system_14" ["label"="Assets<GltfPrimitive>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_gltf::GltfMesh>::asset_event_system_15" ["label"="Assets<GltfMesh>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bevy_prototype_debug_lines::LineShader>::asset_event_system_16" ["label"="Assets<LineShader>asset_event_system"]
+		"schedule_&bevy_asset::assets::Assets<bug_game::level::LevelsAsset>::asset_event_system_17" ["label"="Assets<LevelsAsset>asset_event_system"]
+	}
+	
+	subgraph cluster_RenderResource {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="RenderResource";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_RenderResource ["style"="invis"]
+		"schedule_&bevy_render::shader::shader::shader_update_system_0" ["label"="shader_update_system"]
+		"schedule_&bevy_render::mesh::mesh::mesh_resource_provider_system_1" ["label"="mesh_resource_provider_system"]
+		"schedule_&bevy_render::texture::texture::Texture::texture_resource_system_2" ["label"="texture_resource_system"]
+	}
+	
+	subgraph cluster_RenderGraphSystems {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="RenderGraphSystems";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_RenderGraphSystems ["style"="invis"]
+		"schedule_bevy_render::render_graph::system::render_graph_schedule_executor_system_0" ["label"=<render_graph_schedule_executor_system<BR /><FONT COLOR="red" POINT-SIZE="11">Exclusive at start</FONT>>]
+	}
+	
+	subgraph cluster_Draw {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="Draw";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_Draw ["style"="invis"]
+		"schedule_&bevy_render::pipeline::render_pipelines::draw_render_pipelines_system_0" ["label"="draw_render_pipelines_system"]
+		"schedule_&bevy_ui::widget::text::draw_text_system_1" ["label"="draw_text_system"]
+		"schedule_&bevy_text::text2d::draw_text2d_system_2" ["label"="draw_text2d_system"]
+	}
+	
+	subgraph cluster_Render {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="Render";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_Render ["style"="invis"]
+		"schedule_bevy_wgpu::get_wgpu_render_system::{{closure}}_0" ["label"=<{{closure}}<BR /><FONT COLOR="red" POINT-SIZE="11">Exclusive at start</FONT>>]
+	}
+	
+	subgraph cluster_PostRender {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="PostRender";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_PostRender ["style"="invis"]
+		"schedule_&bevy_render::shader::shader_defs::clear_shader_defs_system_0" ["label"="clear_shader_defs_system"]
+		"schedule_&bevy_render::renderer::render_resource::shared_buffers::shared_buffers_update_system_1" ["label"="shared_buffers_update_system"]
+	}
+	
+	subgraph cluster_Last {
+		"style"="rounded";
+		"color"="#e1e5ea";
+		"bgcolor"="#e1e5ea";
+		"rankdir"="TD";
+		"label"="Last";
+		node ["style"="filled", "color"="white", "bgcolor"="white"];
+		MARKER_schedule_Last ["style"="invis"]
+		"schedule_bevy_ecs::world::World::clear_trackers_0" ["label"=<clear_trackers<BR /><FONT COLOR="red" POINT-SIZE="11">Exclusive at start</FONT>>]
+	}
+	
+	MARKER_schedule_First -> MARKER_schedule_LoadAssets []
+	MARKER_schedule_LoadAssets -> MARKER_schedule_PreUpdate []
+	MARKER_schedule_PreUpdate -> MARKER_schedule_Update []
+	MARKER_schedule_Update -> MARKER_schedule_PostUpdate []
+	MARKER_schedule_PostUpdate -> MARKER_schedule_AssetEvents []
+	MARKER_schedule_AssetEvents -> MARKER_schedule_RenderResource []
+	MARKER_schedule_RenderResource -> MARKER_schedule_RenderGraphSystems []
+	MARKER_schedule_RenderGraphSystems -> MARKER_schedule_Draw []
+	MARKER_schedule_Draw -> MARKER_schedule_Render []
+	MARKER_schedule_Render -> MARKER_schedule_PostRender []
+	MARKER_schedule_PostRender -> MARKER_schedule_Last []
+}

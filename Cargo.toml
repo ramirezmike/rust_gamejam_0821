@@ -1,0 +1,42 @@
+[package]
+name = "game_jam"
+version = "0.1.0"
+publish = false
+authors = ["mramirez <ramirezmike2@gmail.com>"]
+edition = "2018"
+
+[features]
+default = [
+    "bevy/bevy_gltf",
+    "bevy/bevy_winit",
+    "bevy/render",
+    "bevy/bevy_gilrs",
+    "bevy/bevy_winit",
+    "bevy/png",
+    "game_plugin/default",
+]
+
+native = [
+    "bevy/bevy_wgpu",
+    "game_plugin/native"
+]
+
+web = [
+    "bevy_webgl2",
+]
+
+dev = [
+    "bevy/dynamic",
+    "bevy/bevy_dynamic_plugin",
+    "native",
+]
+
+[dependencies]
+bevy = { version = "0.5.0", default-features = false }
+game_plugin = {path = "game_plugin"}
+winit = "0.24.0"
+
+bevy_webgl2 = {version = "0.5.0", optional = true}
+
+[build-dependencies]
+embed-resource = "1.4"
