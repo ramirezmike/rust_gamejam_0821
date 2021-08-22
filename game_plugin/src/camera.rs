@@ -2,6 +2,9 @@ use bevy::prelude::*;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
 use bevy::render::camera::PerspectiveProjection;
+use crate::theater_outside::LevelReady;
+
+pub mod fly_camera;
 
 pub struct CameraTarget;
 
@@ -17,13 +20,15 @@ pub enum CameraBehavior {
     MoveToX(f32),
 }
 
+use fly_camera::*;
+
 pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app//.add_plugin(PickingPlugin)
            .add_system_set(
                SystemSet::on_update(crate::AppState::InGame)
-                         //.with_system(toggle_fly.system())
+                         .with_system(toggle_fly.system())
            )
            .add_system_set(
                SystemSet::on_enter(crate::AppState::InGame)
@@ -31,8 +36,9 @@ impl Plugin for CameraPlugin {
            )
            .add_system_set(
                SystemSet::on_update(crate::AppState::MainMenu)
-                         //.with_system(toggle_fly.system())
+                         .with_system(toggle_fly.system())
            )
+           .add_plugin(FlyCameraPlugin)
            .add_system(update_camera.system());
     }
 }
@@ -217,13 +223,15 @@ pub fn create_camera(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut cameras: Query<&mut Transform, With<MainCamera>>,
-//    level_ready: Res<environment::LevelReady>,
+    level_ready: Res<LevelReady>,
 ) {
-//  if !level_ready.0 {
-//      return; // level isn't loaded so we'll try again later
-//  }
+    if !level_ready.0 {
+        return; // level isn't loaded so we'll try again later
+    }
 
     let mut transform = Transform::default();
+    transform.translation = Vec3::new(12.947529, 10.564835, -0.079304874);
+    transform.rotation = Quat::from_axis_angle(Vec3::new(-0.19391298, 0.9619324, 0.19257164), 1.6026608);
 
     if let Ok(mut camera_transform) = cameras.single_mut() {
         *camera_transform = transform;
@@ -261,3 +269,44 @@ pub struct MainCamera {
 }
 
 static DEFAULT_FOV: f32 = 0.7853982; 
+
+fn toggle_fly(
+    mut commands: Commands, 
+    keys: Res<Input<KeyCode>>, 
+    mut windows: ResMut<Windows>,
+    mut camera: Query<(Entity, &mut MainCamera, Option<&FlyCamera>, &mut Transform)>,
+    mut cooldown: Local<f32>,
+    timer: Res<Time>,
+) {
+    *cooldown += timer.delta_seconds();
+
+    if *cooldown < 2.0 {
+        return;
+    }
+
+    if keys.just_pressed(KeyCode::F) {
+        println!("PRESSED F");
+        let window = windows.get_primary_mut().unwrap();
+        for (e, _, f, mut t) in camera.iter_mut() {
+            match f {
+                Some(_) => {
+                    commands.entity(e).remove::<FlyCamera>();
+                    window.set_cursor_lock_mode(false);
+                    window.set_cursor_visibility(true);
+                },
+                None => {
+                    let mut fly_camera = FlyCamera::default();
+                    fly_camera.key_forward = KeyCode::W; 
+                    fly_camera.key_backward = KeyCode::S; 
+                    fly_camera.key_left = KeyCode::A; 
+                    fly_camera.key_right = KeyCode::D; 
+                    commands.entity(e).insert(fly_camera);
+                    window.set_cursor_lock_mode(true);
+                    window.set_cursor_visibility(false);
+                },
+            }
+        }
+
+        *cooldown = 0.0;
+    }
+}

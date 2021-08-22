@@ -28,7 +28,9 @@ impl AssetLoader for LevelsAssetLoader {
 }
 
 #[derive(Default)]
-pub struct AssetsLoading(Vec<HandleUntyped>);
+pub struct AssetsLoading {
+    pub asset_handles: Vec<HandleUntyped>
+}
 pub fn check_assets_ready(
     mut state: ResMut<State<crate::AppState>>,
     server: Res<AssetServer>,
@@ -39,7 +41,7 @@ pub fn check_assets_ready(
 
     let mut ready = true;
 
-    for handle in loading.0.iter() {
+    for handle in loading.asset_handles.iter() {
         match server.get_load_state(handle) {
             LoadState::Failed => {
                 // one of our assets had an error

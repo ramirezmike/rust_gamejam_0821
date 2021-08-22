@@ -186,12 +186,12 @@ pub fn menu(
             byline.sections[0].style.color.set_a(a + time.delta_seconds() / 5.0);
         } 
 
-        if a > 0.8 {
+//        if a > 0.8 {
             // make buttons visible now that byline is visible enough
             for mut visible in menu_buttons.iter_mut() {
                 visible.is_visible = true; 
             }
-        }
+//        }
     }
 
     let mut next_button = HashMap::new();
@@ -238,7 +238,7 @@ pub fn menu(
 
     if let Some(selected_button) = selected_button {
         if selected_button == menu_data.start_button_entity {
-            state.set(crate::AppState::LevelTitle).unwrap();
+            state.set(crate::AppState::InGame).unwrap();
         }
         if selected_button == menu_data.quit_button_entity {
             exit.send(AppExit);

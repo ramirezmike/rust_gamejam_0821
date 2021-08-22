@@ -13,7 +13,10 @@ pub mod credits;
 pub mod hud_pass;
 pub mod game_controller;
 pub mod pause;
+pub mod player;
+pub mod game_settings;
 mod menu;
+mod theater_outside; 
 
 use camera::*;
 
@@ -72,6 +75,9 @@ impl Plugin for GamePlugin {
            )
            .add_system_set(SystemSet::on_update(AppState::Credits).with_system(credits::update_credits.system()))
            .add_system_set(SystemSet::on_update(AppState::InGame).with_system(credits::show_credits.system()))
+           .add_plugin(theater_outside::TheaterOutsidePlugin)
+           .add_plugin(camera::CameraPlugin)
+           .add_plugin(game_settings::GameSettingsPlugin)
 
           //.add_startup_system(setup.system())
           //.add_system(print_on_load.system())
