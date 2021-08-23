@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{Direction, game_controller, game_settings};
+use crate::{Direction, game_controller, game_settings, asset_loader, level_collision};
 
 pub struct Player {
     movement: Option::<Direction>,
@@ -45,22 +45,24 @@ pub fn player_movement_update(
     mut player: Query<(&mut Player, &mut Transform)>,
     settings: Res<game_settings::GameSettings>,
     time: Res<Time>,
+    level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
+    level_info_state: Res<asset_loader::LevelInfoState>, 
 ) {
     for (mut player, mut transform) in player.iter_mut() {
         if let Some(movement) = player.movement {
             let mut acceleration = Vec3::default();
             match movement {
                 Direction::Up => {
-                    acceleration += Vec3::new(-1.0, 0.0, 0.0);
-                },
-                Direction::Down => {
                     acceleration += Vec3::new(1.0, 0.0, 0.0);
                 },
+                Direction::Down => {
+                    acceleration += Vec3::new(-1.0, 0.0, 0.0);
+                },
                 Direction::Right => {
-                    acceleration += Vec3::new(0.0, 0.0, -1.0);
+                    acceleration += Vec3::new(0.0, 0.0, 1.0);
                 },
                 Direction::Left => {
-                    acceleration += Vec3::new(0.0, 0.0, 1.0);
+                    acceleration += Vec3::new(0.0, 0.0, -1.0);
                 },
                 _ => ()
             } 
@@ -71,7 +73,26 @@ pub fn player_movement_update(
             player.velocity *= settings.player_friction.powf(time.delta_seconds());
         }
 
-        transform.translation += player.velocity;
+        let new_translation = transform.translation + player.velocity;
+
+        let levels_asset = level_info_assets.get(&level_info_state.handle);
+        if let Some(level_asset) = levels_asset  {
+            let temp_new_translation = new_translation;
+            let new_translation = level_collision::fit_in_level(&level_asset, transform.translation, new_translation);
+
+            // prevent sticking against walls
+            if temp_new_translation.x != new_translation.x {
+                player.velocity.x = 0.0;
+            }
+            if temp_new_translation.y != new_translation.y {
+                player.velocity.y = 0.0;
+            }
+            if temp_new_translation.z != new_translation.z {
+                player.velocity.z = 0.0;
+            }
+
+            transform.translation = new_translation; 
+         }
     }
 }
 

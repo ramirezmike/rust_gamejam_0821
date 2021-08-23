@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{asset_loader, player, };
+use crate::{asset_loader, player, camera, level_collision};
 
 pub struct LevelReady(pub bool);
 pub struct TheaterOutsidePlugin;
@@ -30,9 +30,14 @@ impl Plugin for TheaterOutsidePlugin {
                     .with_system(cleanup_environment.system())
             )
             .add_system_set(
+                SystemSet::on_update(crate::AppState::ResetLevel)
+                    .with_system(reset_level.system())
+            )
+            .add_system_set(
                SystemSet::on_update(crate::AppState::InGame)
                     .with_system(player::player_input.system())
                     .with_system(player::player_movement_update.system())
+                    .with_system(listen_for_level_reset.system())
                //.with_system(holdable::lift_holdable.system().label("handle_lift_events"))
             );
     }
@@ -47,16 +52,61 @@ fn load_assets(
 //    mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut theater_meshes: ResMut<TheaterMeshes>,
+    mut level_info_state: ResMut<asset_loader::LevelInfoState>, 
     mut loading: ResMut<asset_loader::AssetsLoading>,
 ) {
     println!("Adding theater assets");
     theater_meshes.outside = asset_server.load("models/theater_outside.glb#Mesh0/Primitive0");
 
     loading.asset_handles.push(theater_meshes.outside.clone_untyped());
+
+    level_info_state.handle = asset_server.load("data/outside.lvl");
+    asset_server.watch_for_changes().unwrap();
+}
+
+fn listen_for_level_reset(
+    mut state: ResMut<State<crate::AppState>>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::R) {
+        state.set(crate::AppState::ResetLevel).unwrap();
+    }
+}
+fn reset_level( 
+    mut state: ResMut<State<crate::AppState>>,
+    mut timer: Local<f32>,
+    time: Res<Time>,
+) {
+    *timer += time.delta_seconds();
+
+    if *timer > 1.0 {
+        state.set(crate::AppState::InGame).unwrap();
+        *timer = 0.0; 
+    }
 }
 
 fn cleanup_environment(
+    mut commands: Commands,
+    level_mesh: Query<Entity, With<TheaterOutside>>,
+    player: Query<Entity, With<player::Player>>,
+    camera: Query<Entity, With<camera::MainCamera>>,
+    collision_meshes: Query<Entity, With<level_collision::DebugLevelCollisionMesh>>, 
 ) {
+    for entity  in level_mesh.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    for entity  in player.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    for entity  in camera.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    for entity  in collision_meshes.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
 }
 
 struct TheaterOutside { }
@@ -67,10 +117,24 @@ fn load_level(
     mut level_ready: ResMut<LevelReady>,
     mut theater_meshes: ResMut<TheaterMeshes>,
     asset_server: Res<AssetServer>,
+    mut level_info_state: ResMut<asset_loader::LevelInfoState>, 
+    level_info_assets: ResMut<Assets<asset_loader::LevelInfo>>,
+
     mut state: ResMut<State<crate::AppState>>,
 
 ) {
     println!("loading level");
+    println!("Starting to load level...");
+    let levels_asset = level_info_assets.get(&level_info_state.handle);
+    if let Some(level_asset) = levels_asset  {
+        println!("Level loaded");
+    } else {
+        // try again later?
+        println!("failed to load level");
+        state.set(crate::AppState::Loading).unwrap();
+        return;
+    }
+
     let color = Color::hex("072AC8").unwrap(); 
     let mut transform = Transform::identity();
 //  transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
@@ -85,9 +149,19 @@ fn load_level(
                 parent.spawn_bundle(PbrBundle {
                     mesh: theater_meshes.outside.clone(),
                     material: materials.add(color.into()),
+                    transform: {
+                        let mut t = Transform::default();
+                        t.rotate(Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), std::f32::consts::PI));
+
+                        t
+                    },
                     ..Default::default()
                 });
             }).id();
+
+    if let Some(outside) = meshes.get(theater_meshes.outside.clone()) {
+        println!("Indices: {:?}", outside.indices());
+    }
 
     player::spawn_player(&mut commands, &mut materials, &mut meshes, 0, 1, 0);
 

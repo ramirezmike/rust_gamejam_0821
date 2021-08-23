@@ -230,8 +230,8 @@ pub fn create_camera(
     }
 
     let mut transform = Transform::default();
-    transform.translation = Vec3::new(12.947529, 10.564835, -0.079304874);
-    transform.rotation = Quat::from_axis_angle(Vec3::new(-0.19391298, 0.9619324, 0.19257164), 1.6026608);
+    transform.translation = Vec3::new(-12.5, 10.5, 0.0);
+    transform.rotation = Quat::from_axis_angle(Vec3::new(-0.20287918, -0.9580786, -0.20229985), 1.6107514);
 
     if let Ok(mut camera_transform) = cameras.single_mut() {
         *camera_transform = transform;

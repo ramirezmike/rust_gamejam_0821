@@ -15,6 +15,7 @@ pub mod game_controller;
 pub mod pause;
 pub mod player;
 pub mod game_settings;
+pub mod level_collision;
 mod menu;
 mod theater_outside; 
 
@@ -43,6 +44,7 @@ impl Plugin for GamePlugin {
         app.add_plugins(DefaultPlugins)
 //         .add_plugin(DebugLinesPlugin)
            .init_resource::<menu::ButtonMaterials>()
+           .init_resource::<asset_loader::LevelInfoState>()
            .add_event::<credits::CreditsEvent>()
 
 //           .add_state(AppState::MainMenu)
@@ -74,7 +76,13 @@ impl Plugin for GamePlugin {
                .with_system(credits::setup_credits.system())
            )
            .add_system_set(SystemSet::on_update(AppState::Credits).with_system(credits::update_credits.system()))
-           .add_system_set(SystemSet::on_update(AppState::InGame).with_system(credits::show_credits.system()))
+           .add_system_set(
+               SystemSet::on_update(AppState::InGame)
+                   .with_system(credits::show_credits.system())
+
+                   // DEBUG stuff
+                   .with_system(level_collision::debug_draw_level_colliders.system())
+           )
            .add_plugin(theater_outside::TheaterOutsidePlugin)
            .add_plugin(camera::CameraPlugin)
            .add_plugin(game_settings::GameSettingsPlugin)
@@ -83,6 +91,8 @@ impl Plugin for GamePlugin {
           //.add_system(print_on_load.system())
 
            .init_resource::<asset_loader::AssetsLoading>()
+           .add_asset::<asset_loader::LevelInfo>()
+           .init_asset_loader::<asset_loader::LevelsAssetLoader>()
 
 
            .add_system(exit.system());

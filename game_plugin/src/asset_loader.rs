@@ -4,6 +4,8 @@ use bevy::reflect::{TypeUuid};
 use bevy::utils::{BoxedFuture};
 use serde::Deserialize;
 
+use crate::{level_collision,};
+
 
 // this is for hot reloading
 #[derive(Default)]
@@ -16,14 +18,14 @@ impl AssetLoader for LevelsAssetLoader {
     ) -> BoxedFuture<'a, Result<(), anyhow::Error>> {
         Box::pin(async move {
             println!("Level asset reloaded");
-//            let custom_asset = ron::de::from_bytes::<LevelsAsset>(bytes)?;
-//            load_context.set_default_asset(LoadedAsset::new(custom_asset));
+            let lvl_asset = ron::de::from_bytes::<LevelInfo>(bytes)?;
+            load_context.set_default_asset(LoadedAsset::new(lvl_asset));
             Ok(())
         })
     }
 
     fn extensions(&self) -> &[&str] {
-        &["custom"]
+        &["lvl"]
     }
 }
 
@@ -58,3 +60,14 @@ pub fn check_assets_ready(
         state.set(crate::AppState::MainMenu).unwrap();
     }
 }
+
+#[derive(Default)]
+pub struct LevelInfoState {
+    pub handle: Handle<LevelInfo>,
+}
+#[derive(Debug, Clone, Deserialize, TypeUuid)]
+#[uuid = "39cadc56-aa9c-4543-8640-a018b74b5052"]
+pub struct LevelInfo {
+    pub collision_info: level_collision::LevelCollisionInfo
+}
+

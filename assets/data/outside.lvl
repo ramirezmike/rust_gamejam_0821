@@ -1,0 +1,13 @@
+LevelInfo (
+    collision_info: LevelCollisionInfo (
+                        shapes: [
+                            Rect(RectangleCollision(
+                                left_z: -9.0,
+                                right_z: 9.0,
+                                top_x: 13.0,
+                                bottom_x: -0.5,
+                                height: 1.5,
+                            ))
+                        ]
+                    )
+)
