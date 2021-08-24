@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
 use bevy::render::camera::PerspectiveProjection;
-use crate::theater_outside::LevelReady;
+use crate::{theater_outside::LevelReady, asset_loader, player::Player, level_collision::CollisionShape};
 
 pub mod fly_camera;
 
@@ -19,6 +19,20 @@ pub enum CameraBehavior {
     LooseFollowX(f32),
     MoveToX(f32),
 }
+
+#[derive(Debug, Clone, Deserialize, TypeUuid)]
+#[uuid = "522adc56-aa9c-4543-8640-a018b74b5052"] // this needs to be actually generated
+pub struct CameraPosition {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub rotation_x: f32,
+    pub rotation_y: f32,
+    pub rotation_z: f32,
+    pub rotation_angle: f32,
+    pub speed: f32,
+}
+
 
 use fly_camera::*;
 
@@ -57,10 +71,13 @@ fn lerp(a: f32, b: f32, f: f32) -> f32 {
 }
     
 fn update_camera(
-    mut cameras: Query<(Entity, &mut MainCamera, &mut Transform)>,
-    target: Query<&Transform, (With<CameraTarget>, Without<MainCamera>)>,
+    mut cameras: Query<(Entity, &mut MainCamera, &mut Transform), Without<Player>>,
+    fly_camera: Query<&fly_camera::FlyCamera>,
+    player: Query<&Transform, (With<Player>, Without<MainCamera>)>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
+    level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
+    level_info_state: Res<asset_loader::LevelInfoState>, 
 ) {
     if keyboard_input.just_pressed(KeyCode::P) {
         for (_e, _camera, transform) in cameras.iter_mut() {
@@ -76,147 +93,51 @@ fn update_camera(
         }
     }
 
-//  for (_, mut main_camera, mut camera_transform) in cameras.iter_mut() {
-//      if let Ok(target_transform) = target.single() {
-//          for behavior in level.camera_behaviors() {
-//              match behavior {
-//                  CameraBehavior::LockFollowX(min, max) => {
-//                      match &mut main_camera.current_followx_target {
-//                          Some(movement) => {
-//                              movement.current_movement_time += time.delta_seconds();
+    // this is for debugging. If we're flying, don't move the player
+    if fly_camera.iter().count() > 0 {
+        return;
+    }
 
-//                              let new_translation = lerp(movement.starting_from, movement.target, 
-//                                                         movement.current_movement_time / movement.finish_movement_time);
-//                                                   
-//                              if movement.current_movement_time > movement.finish_movement_time {
-//                                  camera_transform.translation.x = movement.target;
-//                                  main_camera.current_followx_target = None;
-//                              } else if !new_translation.is_nan() {
-//                                  camera_transform.translation.x = new_translation;
-//                              }
-//                          },
-//                          None => {
-//                              let x_distance = target_transform.translation.x - camera_transform.translation.x;
-//                              if x_distance > *max || x_distance < *min {
-//                                  main_camera.current_followx_target = Some(
-//                                      CameraMovement {
-//                                          target: target_transform.translation.x 
-//                                                  - ((*max - *min) / 2.0)
-//                                                  - *min,
-//                                          starting_from: camera_transform.translation.x,
-//                                          current_movement_time: 0.0,
-//                                          finish_movement_time: 0.5,
-//                                      }
-//                                  );
-//                              } 
-//                          }
-//                      }
-//                  },
-//                  CameraBehavior::LockFollowY(min, max, offset) => {
-//                      match &mut main_camera.current_followy_target {
-//                          Some(movement) => {
-//                              movement.current_movement_time += time.delta_seconds();
+    let levels_asset = level_info_assets.get(&level_info_state.handle);
+    if let Some(level_asset) = levels_asset  {
+        for player in player.iter() {
+            for shape in level_asset.collision_info.shapes.iter() {
+                match shape {
+                    CollisionShape::Rect((r, c)) => {
+                        if let Some(c) = c {
+                            if player.translation.x >= r.bottom_x 
+                            && player.translation.x <= r.top_x 
+                            && player.translation.z <= r.right_z
+                            && player.translation.z >= r.left_z {
 
-//                              let new_translation = lerp(movement.starting_from, movement.target, 
-//                                                         movement.current_movement_time / movement.finish_movement_time);
-//                                                   
-//                              if movement.current_movement_time > movement.finish_movement_time {
-//                                  camera_transform.translation.y = movement.target;
-//                                  main_camera.current_followy_target = None;
-//                              } else if !new_translation.is_nan() {
-//                                  camera_transform.translation.y = new_translation;
-//                              }
-//                          },
-//                          None => {
-//                              let y_distance = target_transform.translation.y - camera_transform.translation.y;
-//                              if y_distance > *max || y_distance < *min {
-//                                  main_camera.current_followy_target = Some(
-//                                      CameraMovement {
-//                                          target: target_transform.translation.y + offset,
-//                                          starting_from: camera_transform.translation.y,
-//                                          current_movement_time: 0.0,
-//                                          finish_movement_time: 0.5,
-//                                      }
-//                                  );
-//                              } 
-//                          }
-//                      }
-//                  },
-//                  CameraBehavior::FollowY(offset) => {
-//                      camera_transform.translation.y += 
-//                          (target_transform.translation.y - camera_transform.translation.y + offset) 
-//                         * if is_menu { 0.4 } else { 0.8 } 
-//                         * time.delta_seconds();
-//                  },
-//                  CameraBehavior::LooseFollowX(offset) => {
-//                      camera_transform.translation.x += 
-//                          (target_transform.translation.x - camera_transform.translation.x + offset) 
-//                         * 1.8 
-//                         * time.delta_seconds();
-//                  },
-//                  CameraBehavior::MoveToX(offset) => {
-//                      camera_transform.translation.x += 
-//                          (offset - camera_transform.translation.x) 
-//                         * 1.8 
-//                         * time.delta_seconds();
-//                  },
-//                  CameraBehavior::FollowZ(offset) => {
-//                      camera_transform.translation.z += 
-//                          (target_transform.translation.z - camera_transform.translation.z + offset) 
-//                         * 0.8 
-//                         * time.delta_seconds();
-//                  },
-//                  CameraBehavior::Static => (),
-//              }
-//          }
-//      }
-//  }
+                                for (_e, _camera, mut transform) in cameras.iter_mut() {
+                                    transform.translation.x += 
+                                        (c.x - transform.translation.x) 
+                                       * c.speed
+                                       * time.delta_seconds();
+                                    transform.translation.y += 
+                                        (c.y - transform.translation.y) 
+                                       * c.speed
+                                       * time.delta_seconds();
+                                    transform.translation.z += 
+                                        (c.z - transform.translation.z) 
+                                       * c.speed
+                                       * time.delta_seconds();
+
+                                    let end_rotation = Quat::from_axis_angle(Vec3::new(c.rotation_x, c.rotation_y, c.rotation_z), 
+                                                                             c.rotation_angle);
+                                    transform.rotation = transform.rotation.slerp(end_rotation, time.delta_seconds());
+                                }
+                            }
+                        }
+                    }
+                    _ => ()
+                }
+            }
+        }
+    }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum MovementStep { Start, Middle, Loading, End }
-impl Default for MovementStep {
-    fn default() -> Self { MovementStep::Start }
-}
-
-#[derive(Default)]
-pub struct CameraMouthMovement {
-    moving: bool,
-    current_movement_time: f32,
-    current_movement_step: MovementStep,  
-}
-
-pub struct CameraMouth {
-    start: Vec3,
-    middle: Vec3,
-    end: Vec3,
-}
-
-#[derive(Default)]
-pub struct CameraBoltMovement {
-    moving: bool,
-    current_movement_time: f32,
-    current_movement_step: MovementStep,  
-}
-
-pub struct CameraBolt {
-    start: Vec3,
-    middle: Vec3,
-    end: Vec3,
-}
-
-#[derive(Default)]
-pub struct CameraSpikeMovement {
-    moving: bool,
-    current_movement_time: f32,
-    current_movement_step: MovementStep,  
-}
-
-pub struct CameraSpike {
-    start: Vec3,
-    middle: Vec3,
-    end: Vec3,
-}
 
 pub fn create_camera(
     mut commands: Commands,

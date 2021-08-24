@@ -1,7 +1,7 @@
 use bevy::{prelude::*,};
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
-use crate::{asset_loader};
+use crate::{asset_loader, camera, lerp};
 
 #[derive(Debug, Clone, Deserialize, TypeUuid)]
 #[uuid = "40cadc56-aa9c-4543-8640-a018b74b5052"]
@@ -13,7 +13,8 @@ pub struct LevelCollisionInfo {
 #[derive(Debug, Clone, Deserialize, TypeUuid)]
 #[uuid = "41cadc56-aa9c-4543-8640-a018b74b5052"]
 pub enum CollisionShape {
-    Rect(RectangleCollision)
+    Rect((RectangleCollision, Option::<camera::CameraPosition>)),
+    Stair(RectangleCollision)
 }
 
 #[derive(Debug, Clone, Deserialize, TypeUuid)]
@@ -24,6 +25,7 @@ pub struct RectangleCollision {
     pub top_x: f32,
     pub bottom_x: f32,
     pub height: f32,
+    pub base_height: f32,
 }
 
 pub fn fit_in_level(
@@ -34,12 +36,29 @@ pub fn fit_in_level(
     let mut current_shapes = vec!();
     for shape in level_info.collision_info.shapes.iter() {
         match shape {
-            CollisionShape::Rect(r) => {
+            CollisionShape::Rect((r, _)) => {
                 if target.x >= r.bottom_x 
                 && target.x <= r.top_x 
                 && target.z <= r.right_z
                 && target.z >= r.left_z {
-                    return target;
+                    return Vec3::new(target.x, r.height, target.z);
+                }
+
+                if current.x >= r.bottom_x 
+                && current.x <= r.top_x 
+                && current.z <= r.right_z
+                && current.z >= r.left_z {
+                    current_shapes.push(r); 
+                }
+            },
+            CollisionShape::Stair(r) => {
+                if target.x >= r.bottom_x 
+                && target.x <= r.top_x 
+                && target.z <= r.right_z
+                && target.z >= r.left_z {
+                    let height = lerp(r.base_height, r.height, (target.x - r.bottom_x) / (r.top_x - r.bottom_x));
+
+                    return Vec3::new(target.x, height, target.z);
                 }
 
                 if current.x >= r.bottom_x 
@@ -69,7 +88,7 @@ pub fn fit_in_level(
                     target.z
                 };
 
-        Vec3::new(x, target.y, z)
+        Vec3::new(x, first_shape.height, z)
     } else {
         current
     }
@@ -84,7 +103,6 @@ pub fn debug_draw_level_colliders(
     mut cooldown: Local<usize>,
     mut level_info_state: ResMut<asset_loader::LevelInfoState>, 
     level_info_assets: ResMut<Assets<asset_loader::LevelInfo>>,
-
 
     collision_meshes: Query<Entity, With<DebugLevelCollisionMesh>>, 
 ) {
@@ -102,17 +120,23 @@ pub fn debug_draw_level_colliders(
             if let Some(level_asset) = levels_asset {
                 for shape in level_asset.collision_info.shapes.iter() {
                     match shape {
-                        CollisionShape::Rect(r) => {
+                        CollisionShape::Rect((r, _)) | CollisionShape::Stair(r) => {
                             let color = Color::hex("FF0000").unwrap(); 
+                            let color = Color::rgba(color.r(), color.g(), color.b(), 0.5);
+
                             // left side
                             commands.spawn_bundle(PbrBundle {
                                         mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
                                         material: materials.add(color.into()),
                                         transform: {
-                                            let mut transform = Transform::from_xyz((r.top_x - r.bottom_x) / 2.0, r.height, r.left_z);
+                                            let mut transform = Transform::from_xyz(r.bottom_x + ((r.top_x - r.bottom_x) / 2.0), r.height, r.left_z);
                                             transform.apply_non_uniform_scale(Vec3::new(r.top_x - r.bottom_x, 1.0, 1.0)); 
 
                                             transform
+                                        },
+                                        visible: Visible {
+                                            is_visible: true,
+                                            is_transparent: true,
                                         },
                                         ..Default::default()
                                     })
@@ -123,10 +147,14 @@ pub fn debug_draw_level_colliders(
                                         mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
                                         material: materials.add(color.into()),
                                         transform: {
-                                            let mut transform = Transform::from_xyz((r.top_x - r.bottom_x) / 2.0, r.height, r.right_z);
+                                            let mut transform = Transform::from_xyz(r.bottom_x + ((r.top_x - r.bottom_x) / 2.0), r.height, r.right_z);
                                             transform.apply_non_uniform_scale(Vec3::new(r.top_x - r.bottom_x, 1.0, 1.0)); 
 
                                             transform
+                                        },
+                                        visible: Visible {
+                                            is_visible: true,
+                                            is_transparent: true,
                                         },
                                         ..Default::default()
                                     })
@@ -142,6 +170,10 @@ pub fn debug_draw_level_colliders(
 
                                             transform
                                         },
+                                        visible: Visible {
+                                            is_visible: true,
+                                            is_transparent: true,
+                                        },
                                         ..Default::default()
                                     })
                                     .insert(DebugLevelCollisionMesh {});
@@ -156,15 +188,19 @@ pub fn debug_draw_level_colliders(
 
                                             transform
                                         },
+                                        visible: Visible {
+                                            is_visible: true,
+                                            is_transparent: true,
+                                        },
                                         ..Default::default()
                                     })
                                     .insert(DebugLevelCollisionMesh {});
-                        }
+                        },
                     }
                 }
             }
         } else {
-            for entity  in collision_meshes.iter() {
+            for entity in collision_meshes.iter() {
                 commands.entity(entity).despawn_recursive();
             }
         }

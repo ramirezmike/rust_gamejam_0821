@@ -1,13 +1,65 @@
 LevelInfo (
     collision_info: LevelCollisionInfo (
                         shapes: [
-                            Rect(RectangleCollision(
+                            Rect((RectangleCollision(
                                 left_z: -9.0,
                                 right_z: 9.0,
-                                top_x: 13.0,
+                                top_x: 12.0,
                                 bottom_x: -0.5,
+                                base_height: 1.5,
                                 height: 1.5,
-                            ))
+                            ), Some(CameraPosition (
+                                        x: -12.5,
+                                        y: 10.5,
+                                        z: 0.0,
+                                        rotation_x: -0.20287918,
+                                        rotation_y: -0.9580786,
+                                        rotation_z: -0.20229985,
+                                        rotation_angle: 1.6107514,
+                                        speed: 0.8,
+                            )))),
+                            Rect((RectangleCollision(
+                                left_z: 9.0,
+                                right_z: 19.0,
+                                top_x: 4.0,
+                                bottom_x: -0.5,
+                                base_height: 1.5,
+                                height: 1.5,
+                            ), Some(CameraPosition (
+                                        x: -6.715951,
+                                        y: 6.4616504,
+                                        z: 25.862953,
+                                        rotation_x: -0.23770857,
+                                        rotation_y: -0.9610641,
+                                        rotation_z: -0.14089142,
+                                        rotation_angle: 1.1052444,
+                                        speed: 0.8,
+                            )))),
+                            Stair(RectangleCollision(
+                                left_z: 19.0,
+                                right_z: 22.0,
+                                top_x: 12.0,
+                                bottom_x: -0.5,
+                                base_height: 1.5,
+                                height: 5.5,
+                            )),
+                            Rect((RectangleCollision(
+                                left_z: 22.0,
+                                right_z: 26.0,
+                                top_x: 12.0,
+                                bottom_x: 10.0,
+                                base_height: 1.5,
+                                height: 5.5,
+                            ), Some(CameraPosition (
+                                        x: -12.5,
+                                        y: 10.5,
+                                        z: 18.0,
+                                        rotation_x: -0.20287918,
+                                        rotation_y: -0.9580786,
+                                        rotation_z: -0.20229985,
+                                        rotation_angle: 1.6107514,
+                                        speed: 0.8,
+                            )))),
                         ]
                     )
 )

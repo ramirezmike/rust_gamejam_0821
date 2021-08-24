@@ -14,6 +14,7 @@ pub mod hud_pass;
 pub mod game_controller;
 pub mod pause;
 pub mod player;
+pub mod enemy;
 pub mod game_settings;
 pub mod level_collision;
 mod menu;
@@ -158,4 +159,8 @@ pub fn fullscreen_app(
     println!("Setting fullscreen...");
     window.set_maximized(true);
     window.set_mode(WindowMode::BorderlessFullscreen);
+}
+
+pub fn lerp(a: f32, b: f32, f: f32) -> f32 {
+    return a + f * (b - a);
 }

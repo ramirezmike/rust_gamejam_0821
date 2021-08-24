@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{asset_loader, player, camera, level_collision};
+use crate::{asset_loader, player, camera, level_collision, enemy};
 
 pub struct LevelReady(pub bool);
 pub struct TheaterOutsidePlugin;
@@ -9,6 +9,7 @@ impl Plugin for TheaterOutsidePlugin {
         app
             .insert_resource(LevelReady(false))
             .init_resource::<TheaterMeshes>()
+            .add_plugin(enemy::EnemyPlugin)
 
             //.insert_resource(PathFinder::new())
             //.init_resource::<crate::pause::PauseButtonMaterials>()
@@ -92,19 +93,19 @@ fn cleanup_environment(
     camera: Query<Entity, With<camera::MainCamera>>,
     collision_meshes: Query<Entity, With<level_collision::DebugLevelCollisionMesh>>, 
 ) {
-    for entity  in level_mesh.iter() {
+    for entity in level_mesh.iter() {
         commands.entity(entity).despawn_recursive();
     }
 
-    for entity  in player.iter() {
+    for entity in player.iter() {
         commands.entity(entity).despawn_recursive();
     }
 
-    for entity  in camera.iter() {
+    for entity in camera.iter() {
         commands.entity(entity).despawn_recursive();
     }
 
-    for entity  in collision_meshes.iter() {
+    for entity in collision_meshes.iter() {
         commands.entity(entity).despawn_recursive();
     }
 }
@@ -116,6 +117,7 @@ fn load_level(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut level_ready: ResMut<LevelReady>,
     mut theater_meshes: ResMut<TheaterMeshes>,
+    enemy_meshes: Res<enemy::EnemyMeshes>,
     asset_server: Res<AssetServer>,
     mut level_info_state: ResMut<asset_loader::LevelInfoState>, 
     level_info_assets: ResMut<Assets<asset_loader::LevelInfo>>,
@@ -164,6 +166,7 @@ fn load_level(
     }
 
     player::spawn_player(&mut commands, &mut materials, &mut meshes, 0, 1, 0);
+    enemy::spawn_enemy(&mut commands, &mut materials, &mut meshes, &enemy_meshes, 5, 1, 0);
 
     level_ready.0 = true;
 
