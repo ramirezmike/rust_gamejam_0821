@@ -46,6 +46,8 @@ impl Plugin for GamePlugin {
 //         .add_plugin(DebugLinesPlugin)
            .init_resource::<menu::ButtonMaterials>()
            .init_resource::<asset_loader::LevelInfoState>()
+
+           .init_resource::<player::PersonMeshes>()
            .add_event::<credits::CreditsEvent>()
 
 //           .add_state(AppState::MainMenu)

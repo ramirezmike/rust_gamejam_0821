@@ -7,10 +7,29 @@ pub struct Player {
     velocity: Vec3,
 }
 
+pub static SCALE: f32 = 0.36;
+
+#[derive(Default)]
+pub struct PersonMeshes {
+    pub person: Handle<Mesh>,
+}
+
+pub fn load_assets(
+    asset_server: Res<AssetServer>,
+    mut person_meshes: ResMut<PersonMeshes>,
+    mut loading: ResMut<asset_loader::AssetsLoading>,
+) {
+    println!("Adding person assets");
+    person_meshes.person = asset_server.load("models/dude.glb#Mesh0/Primitive0");
+
+    loading.asset_handles.push(person_meshes.person.clone_untyped());
+}
+
 pub fn spawn_player(
     commands: &mut Commands, 
     materials: &mut ResMut<Assets<StandardMaterial>>,
     meshes: &mut ResMut<Assets<Mesh>>,
+    person_meshes: &Res<PersonMeshes>,
 
     x: usize,
     y: usize,
@@ -19,7 +38,7 @@ pub fn spawn_player(
     let color = Color::hex("FCF300").unwrap(); 
 
     let mut transform = Transform::from_translation(Vec3::new(x as f32, y as f32, z as f32));
-//    transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
+    transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
     transform.rotate(Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), std::f32::consts::PI));
     let inner_mesh_vertical_offset = 1.0;
     let player_entity = 
@@ -33,7 +52,7 @@ pub fn spawn_player(
             })
             .with_children(|parent|  {
                 parent.spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere { radius: 0.25, subdivisions: 0 })),
+                    mesh: person_meshes.person.clone(),
                     material: materials.add(color.into()),
                     transform: Transform::from_xyz(0.0, 0.5, 0.0),
                     ..Default::default()
@@ -79,8 +98,6 @@ pub fn player_movement_update(
         if let Some(level_asset) = levels_asset  {
             let temp_new_translation = new_translation;
             let new_translation = level_collision::fit_in_level(&level_asset, transform.translation, new_translation);
-
-            // prevent sticking against walls
             if temp_new_translation.x != new_translation.x {
                 player.velocity.x = 0.0;
             }
@@ -91,8 +108,17 @@ pub fn player_movement_update(
                 player.velocity.z = 0.0;
             }
 
+            // wow, this actually works?
+            let angle = (-(new_translation.z - transform.translation.z)).atan2(new_translation.x - transform.translation.x);
+            let rotation = Quat::from_axis_angle(Vec3::Y, angle);
             transform.translation = new_translation; 
+
+            let new_rotation = transform.rotation.lerp(rotation, time.delta_seconds());
+            if !new_rotation.is_nan() {
+                transform.rotation = rotation;
+            }
          }
+
     }
 }
 

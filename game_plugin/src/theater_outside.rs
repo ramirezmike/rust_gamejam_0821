@@ -17,6 +17,7 @@ impl Plugin for TheaterOutsidePlugin {
             //.add_event::<holdable::LiftHoldableEvent>()
             .add_system_set(
                SystemSet::on_enter(crate::AppState::Loading)
+                         .with_system(player::load_assets.system())
                          .with_system(load_assets.system())
             )
             .add_system_set(
@@ -118,6 +119,7 @@ fn load_level(
     mut level_ready: ResMut<LevelReady>,
     mut theater_meshes: ResMut<TheaterMeshes>,
     enemy_meshes: Res<enemy::EnemyMeshes>,
+    person_meshes: Res<player::PersonMeshes>,
     asset_server: Res<AssetServer>,
     mut level_info_state: ResMut<asset_loader::LevelInfoState>, 
     level_info_assets: ResMut<Assets<asset_loader::LevelInfo>>,
@@ -165,7 +167,7 @@ fn load_level(
         println!("Indices: {:?}", outside.indices());
     }
 
-    player::spawn_player(&mut commands, &mut materials, &mut meshes, 0, 1, 0);
+    player::spawn_player(&mut commands, &mut materials, &mut meshes, &person_meshes, 0, 1, 0);
     enemy::spawn_enemy(&mut commands, &mut materials, &mut meshes, &enemy_meshes, 5, 1, 0);
 
     level_ready.0 = true;
