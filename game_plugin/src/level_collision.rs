@@ -33,7 +33,8 @@ pub fn fit_in_level(
     current: Vec3,
     target: Vec3,
 ) -> Vec3 {
-    let mut current_shapes = vec!();
+                                                      // isStair
+    let mut current_shapes: Vec::<(&RectangleCollision, bool)> = vec!();
     for shape in level_info.collision_info.shapes.iter() {
         match shape {
             CollisionShape::Rect((r, _)) => {
@@ -48,7 +49,7 @@ pub fn fit_in_level(
                 && current.x <= r.top_x 
                 && current.z <= r.right_z
                 && current.z >= r.left_z {
-                    current_shapes.push(r); 
+                    current_shapes.push((r, false)); 
                 }
             },
             CollisionShape::Stair(r) => {
@@ -65,14 +66,14 @@ pub fn fit_in_level(
                 && current.x <= r.top_x 
                 && current.z <= r.right_z
                 && current.z >= r.left_z {
-                    current_shapes.push(r); 
+                    current_shapes.push((r, true)); 
                 }
             }
         }
     }
 
     if !current_shapes.is_empty() {
-        let first_shape = current_shapes[0];
+        let (first_shape, is_stair) = current_shapes[0];
         let x = if target.x < first_shape.bottom_x {
                     first_shape.bottom_x
                 } else if target.x > first_shape.top_x {
@@ -88,7 +89,7 @@ pub fn fit_in_level(
                     target.z
                 };
 
-        Vec3::new(x, first_shape.height, z)
+        Vec3::new(x, if is_stair { current.y } else { first_shape.height }, z)
     } else {
         current
     }
