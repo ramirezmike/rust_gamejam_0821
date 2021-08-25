@@ -102,7 +102,7 @@ pub fn debug_draw_level_colliders(
     keyboard_input: Res<Input<KeyCode>>,
     mut is_drawing: Local<bool>,
     mut cooldown: Local<usize>,
-    mut level_info_state: ResMut<asset_loader::LevelInfoState>, 
+    level_info_state: Res<asset_loader::LevelInfoState>, 
     level_info_assets: ResMut<Assets<asset_loader::LevelInfo>>,
 
     collision_meshes: Query<Entity, With<DebugLevelCollisionMesh>>, 

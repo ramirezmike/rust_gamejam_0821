@@ -11,6 +11,7 @@ pub mod asset_loader;
 pub mod level_over;
 pub mod credits;
 pub mod hud_pass;
+pub mod cutscene;
 pub mod game_controller;
 pub mod pause;
 pub mod player;
@@ -29,6 +30,7 @@ pub enum AppState {
     MainMenu,
     Loading,
     Pause,
+    Cutscene,
     InGame,
     ScoreDisplay,
     LevelTitle,

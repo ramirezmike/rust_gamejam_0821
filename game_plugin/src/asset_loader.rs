@@ -4,7 +4,7 @@ use bevy::reflect::{TypeUuid};
 use bevy::utils::{BoxedFuture};
 use serde::Deserialize;
 
-use crate::{level_collision,};
+use crate::{level_collision, cutscene};
 
 
 // this is for hot reloading
@@ -68,6 +68,7 @@ pub struct LevelInfoState {
 #[derive(Debug, Clone, Deserialize, TypeUuid)]
 #[uuid = "39cadc56-aa9c-4543-8640-a018b74b5052"]
 pub struct LevelInfo {
-    pub collision_info: level_collision::LevelCollisionInfo
+    pub collision_info: level_collision::LevelCollisionInfo,
+    pub cutscenes: cutscene::Cutscenes,
 }
 

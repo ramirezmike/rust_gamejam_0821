@@ -61,5 +61,20 @@ LevelInfo (
                                         speed: 0.8,
                             )))),
                         ]
-                    )
+                    ),
+    cutscenes: Cutscenes(
+        cutscenes: [
+            Cutscene (
+                location: (Vec2(5.0, 7.0), 1.0),
+                has_been_triggered: false,
+                segments: [
+                    Debug("test test ttest"),
+                    Debug("another test"),
+                    CharacterPosition(Dude, Left),
+                    Textbox("textbox test test wow this is neat"),
+                    Textbox("This is another message in the textbox"),
+                ],
+            ),
+        ]
+    )
 )

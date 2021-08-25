@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{asset_loader, player, camera, level_collision, enemy};
+use crate::{asset_loader, player, camera, level_collision, enemy, cutscene};
 
 pub struct LevelReady(pub bool);
 pub struct TheaterOutsidePlugin;
@@ -10,6 +10,7 @@ impl Plugin for TheaterOutsidePlugin {
             .insert_resource(LevelReady(false))
             .init_resource::<TheaterMeshes>()
             .add_plugin(enemy::EnemyPlugin)
+            .add_plugin(cutscene::CutscenePlugin)
 
             //.insert_resource(PathFinder::new())
             //.init_resource::<crate::pause::PauseButtonMaterials>()
