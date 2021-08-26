@@ -14,6 +14,7 @@ pub mod hud_pass;
 pub mod cutscene;
 pub mod game_controller;
 pub mod pause;
+pub mod movie;
 pub mod player;
 pub mod enemy;
 pub mod game_settings;
@@ -34,11 +35,13 @@ pub enum AppState {
     Cutscene,
     InGame,
     Lobby,
+    Movie,
     ScoreDisplay,
     LevelTitle,
     ChangingLevel,
     ResetLevel,
     ResetLobby,
+    ResetMovie,
     RestartLevel,
     Credits,
 }
@@ -97,10 +100,16 @@ impl Plugin for GamePlugin {
                    // DEBUG stuff
                    .with_system(level_collision::debug_draw_level_colliders.system())
            )
+           .add_system_set(
+               SystemSet::on_update(AppState::Movie)
+                   // DEBUG stuff
+                   .with_system(level_collision::debug_draw_level_colliders.system())
+           )
            .add_system(handle_change_state_event.system())
            .add_system(debug_move_entity.system())
            .add_plugin(theater_outside::TheaterOutsidePlugin)
            .add_plugin(lobby::LobbyPlugin)
+           .add_plugin(movie::MoviePlugin)
            .add_plugin(camera::CameraPlugin)
            .add_plugin(game_settings::GameSettingsPlugin)
 
@@ -209,18 +218,22 @@ pub fn handle_change_state_event(
             return;
         }
 
+        println!("Actually changing state now");
         state.set(state_change.clone()).unwrap();
         *queued_state_change = None; 
         return;
     }
 
     if let Some(event) = change_state_event_reader.iter().last() {
+        println!("Popping cutscene state");
         state.pop().unwrap();
 
         // get rid of player to avoid triggering more state changes
         for entity in player.iter() {
             commands.entity(entity).despawn_recursive();
         }
+
+        println!("Setting state change");
         *queued_state_change = Some(event.target.clone());
         *delay = 0.01;
     }

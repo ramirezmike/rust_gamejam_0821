@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{enemy, cutscene, player, theater_outside, asset_loader, camera, level_collision, GameState};
+use crate::{enemy, cutscene, player, theater_outside, asset_loader, camera, level_collision, GameState, AppState, };
 
 pub struct LobbyPlugin;
 impl Plugin for LobbyPlugin {
@@ -23,7 +23,7 @@ impl Plugin for LobbyPlugin {
                 SystemSet::on_update(crate::AppState::Lobby)
                     .with_system(debug_in_lobby.system())
                     .with_system(player::player_input.system())
-                   // .with_system(check_for_level_exit.system())
+                    .with_system(check_for_level_exit.system())
                     .with_system(player::player_movement_update.system())
                     .with_system(listen_for_level_reset.system())
             );
@@ -187,5 +187,44 @@ fn cleanup_environment(
 
     for entity in collision_meshes.iter() {
         commands.entity(entity).despawn_recursive();
+    }
+}
+
+pub fn check_for_level_exit(
+    player: Query<&Transform, With<player::Player>>,
+    level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
+    level_info_state: Res<asset_loader::LevelInfoState>, 
+    mut current_cutscene: ResMut<cutscene::CurrentCutscene>,
+    game_state: Res<GameState>,
+    mut state: ResMut<State<AppState>>,
+) {
+    let levels_asset = level_info_assets.get(&level_info_state.handle);
+    if let Some(level_asset) = levels_asset  {
+        for player in player.iter() {
+            for (level, shape) in level_asset.collision_info.shapes.iter() {
+                if *level == game_state.current_level {
+                    match shape {
+                        level_collision::CollisionShape::LevelSwitch((r, _)) => {
+                            if player.translation.x >= r.bottom_x 
+                            && player.translation.x <= r.top_x 
+                            && player.translation.z <= r.right_z
+                            && player.translation.z >= r.left_z {
+                                println!("Level switch triggered!");
+                                current_cutscene.trigger(
+                                    vec!(
+                                        //cutscene::CutsceneSegment::CameraPosition((Vec3::ZERO, Quat::default(), 1.0)),
+                                        cutscene::CutsceneSegment::LevelSwitch(cutscene::Level::Movie),
+                                    ),
+                                    cutscene::Level::Lobby
+                                );
+
+                                state.push(AppState::Cutscene).unwrap();
+                            }
+                        }
+                        _ => ()
+                    }
+                }
+            }
+        }
     }
 }

@@ -50,12 +50,16 @@ impl Plugin for TheaterOutsidePlugin {
 #[derive(Default)]
 pub struct TheaterMeshes {
     pub outside: Handle<Mesh>,
+    pub outside_material: Handle<StandardMaterial>,
+
     pub lobby: Handle<Mesh>,
     pub lobby_railing: Handle<Mesh>,
     pub lobby_concession: Handle<Mesh>,
     pub lobby_desk: Handle<Mesh>,
-    pub outside_material: Handle<StandardMaterial>,
     pub lobby_material: Handle<StandardMaterial>,
+
+    pub movie: Handle<Mesh>,
+    pub movie_material: Handle<StandardMaterial>,
 }
 
 pub fn check_for_level_exit(
@@ -82,7 +86,8 @@ pub fn check_for_level_exit(
                                     vec!(
                                         CutsceneSegment::CameraPosition((Vec3::ZERO, Quat::default(), 1.0)),
                                         CutsceneSegment::LevelSwitch(cutscene::Level::Lobby),
-                                    )
+                                    ),
+                                    cutscene::Level::Outside
                                 );
 
                                 state.push(AppState::Cutscene).unwrap();
@@ -106,10 +111,13 @@ fn load_assets(
 ) {
     println!("Adding theater assets");
     theater_meshes.outside = asset_server.load("models/theater_outside.glb#Mesh0/Primitive0");
+
     theater_meshes.lobby = asset_server.load("models/lobby.glb#Mesh0/Primitive0");
     theater_meshes.lobby_railing = asset_server.load("models/lobby.glb#Mesh1/Primitive0");
     theater_meshes.lobby_concession = asset_server.load("models/lobby.glb#Mesh2/Primitive0");
     theater_meshes.lobby_desk = asset_server.load("models/lobby.glb#Mesh3/Primitive0");
+
+    theater_meshes.movie = asset_server.load("models/movie.glb#Mesh0/Primitive0");
 
     let texture_handle = asset_server.load("models/theater_outside.png");
     theater_meshes.outside_material = materials.add(StandardMaterial {
@@ -123,11 +131,20 @@ fn load_assets(
         ..Default::default()
     });
 
+    let texture_handle = asset_server.load("models/movie.png");
+    theater_meshes.lobby_material = materials.add(StandardMaterial {
+        base_color_texture: Some(texture_handle.clone()),
+        ..Default::default()
+    });
+
     loading.asset_handles.push(theater_meshes.outside.clone_untyped());
+
     loading.asset_handles.push(theater_meshes.lobby.clone_untyped());
     loading.asset_handles.push(theater_meshes.lobby_railing.clone_untyped());
     loading.asset_handles.push(theater_meshes.lobby_concession.clone_untyped());
     loading.asset_handles.push(theater_meshes.lobby_desk.clone_untyped());
+
+    loading.asset_handles.push(theater_meshes.movie.clone_untyped());
 
     level_info_state.handle = asset_server.load("data/outside.lvl");
     asset_server.watch_for_changes().unwrap();
