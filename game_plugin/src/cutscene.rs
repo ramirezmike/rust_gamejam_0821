@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
-use crate::{player,asset_loader,AppState, game_controller, camera};
+use crate::{player,asset_loader,AppState, game_controller, camera, ChangeStateEvent};
 
 pub struct CutsceneEvent {
 }
@@ -22,6 +22,18 @@ pub struct CurrentCutscene {
     segment_index: usize,
     waiting: Option::<CutsceneWait>,
     cutscene: Option::<Cutscene>,
+}
+
+impl CurrentCutscene {
+    pub fn trigger(&mut self, segments: Vec::<CutsceneSegment>) {
+        self.segment_index = 0;
+        self.waiting = None;
+        self.cutscene = Some(Cutscene {
+                            location: (Vec2::ZERO, 0.0), 
+                            has_been_triggered: false,
+                            segments
+                        });
+    }
 }
 
 pub enum CutsceneWait {
@@ -58,7 +70,7 @@ impl Plugin for CutscenePlugin {
                SystemSet::on_update(crate::AppState::Cutscene)
                    .with_system(handle_speechbox_event.system())
                    .with_system(handle_character_display_event.system())
-                   .with_system(debug_move_character.system())
+                   //.with_system(debug_move_character.system())
                    .with_system(update_cutscene.system())
 
            );
@@ -76,6 +88,8 @@ pub fn update_cutscene(
 
     mut speechbox_event_writer: EventWriter<SpeechBoxEvent>, 
     mut character_display_event_writer: EventWriter<CharacterDisplayEvent>, 
+    mut change_state_event_writer: EventWriter<ChangeStateEvent>,
+    mut cameras: Query<&mut Transform, With<camera::MainCamera>>,
     mut action_buffer: Local<Option::<u128>>,
 ) {
     let time_buffer = 100;
@@ -124,6 +138,7 @@ pub fn update_cutscene(
     match &mut current_cutscene.cutscene {
         Some(cutscene) =>  {
             if let Some(segment) = cutscene.segments.get(current_index) {
+                println!("Segment: {:?}", segment);
                 match segment {
                     CutsceneSegment::Debug(text) => {
                         println!("{}", text);
@@ -138,7 +153,42 @@ pub fn update_cutscene(
                             character_and_position: (character.clone(), position.clone())
                         });
                         current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
-                    }
+                    },
+                    CutsceneSegment::LevelSwitch(level) => {
+                        match level {
+                            Level::Lobby => {
+                                change_state_event_writer.send(ChangeStateEvent { target: AppState::Lobby });
+                            },
+                            _ => ()
+                        }
+                    },
+                    CutsceneSegment::CameraPosition((translation, rotation, speed)) => {
+                        let mut reached_target = false;
+                        for mut transform in cameras.iter_mut() {
+                            transform.translation.x += 
+                                (translation.x - transform.translation.x) 
+                               * speed
+                               * time.delta_seconds();
+                            transform.translation.y += 
+                                (translation.y - transform.translation.y) 
+                               * speed
+                               * time.delta_seconds();
+                            transform.translation.z += 
+                                (translation.z - transform.translation.z) 
+                               * speed
+                               * time.delta_seconds();
+
+                            transform.rotation = transform.rotation.slerp(*rotation, time.delta_seconds());
+
+                            if transform.translation.distance(*translation) < 0.5 {
+                                reached_target = true; 
+                            }
+                        }
+
+                        if reached_target {
+                            current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
+                        }
+                    },
                     _ => ()
                 }
             } else {
@@ -170,8 +220,11 @@ pub fn handle_character_display_event(
     person_meshes: Res<player::PersonMeshes>,
     main_camera: Query<Entity, With<camera::MainCamera>>,
 ) {
+    println!("Camera count: {}", main_camera.iter().count());
     for camera_entity in main_camera.iter() {
+        println!("iterating cmaeras");
         for event in character_display_event_reader.iter() {
+            println!("Received display character event");
             let color = Color::hex("FCF300").unwrap(); 
 
             match event.character_and_position {
@@ -478,13 +531,22 @@ pub struct Cutscene {
 #[derive(Debug, Clone, Deserialize, TypeUuid)]
 #[uuid = "49cbdf56-aa9c-3543-8640-bbbbb74b5052"]
 pub enum CutsceneSegment {
-    CameraPosition,
+    CameraPosition((Vec3, Quat, f32)), // position, rotation, speed
     Textbox(String),
     CharacterPosition(Character, Position),
+    LevelSwitch(Level),
     Speech(String, Character),
     Clear(Character),
     Debug(String),
     Delay(f32),
+}
+
+#[derive(Debug, Clone, Deserialize, TypeUuid, PartialEq)]
+#[uuid = "21cbdf56-aa9c-3543-8640-bbbbb74b5052"]
+pub enum Level {
+    Outside,
+    Lobby,
+    Theater,
 }
 
 #[derive(Debug, Clone, Deserialize, TypeUuid)]

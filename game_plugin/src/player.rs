@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{Direction, game_controller, game_settings, asset_loader, level_collision};
+use crate::{Direction, game_controller, game_settings, asset_loader, level_collision, GameState};
 
 pub struct Player {
     movement: Option::<Direction>,
@@ -64,6 +64,7 @@ pub fn player_movement_update(
     mut player: Query<(&mut Player, &mut Transform)>,
     settings: Res<game_settings::GameSettings>,
     time: Res<Time>,
+    game_state: Res<GameState>,
     level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
     level_info_state: Res<asset_loader::LevelInfoState>, 
 ) {
@@ -97,7 +98,7 @@ pub fn player_movement_update(
         let levels_asset = level_info_assets.get(&level_info_state.handle);
         if let Some(level_asset) = levels_asset  {
             let temp_new_translation = new_translation;
-            let new_translation = level_collision::fit_in_level(&level_asset, transform.translation, new_translation);
+            let new_translation = level_collision::fit_in_level(&level_asset, &game_state, transform.translation, new_translation);
             if temp_new_translation.x != new_translation.x {
                 player.velocity.x = 0.0;
             }

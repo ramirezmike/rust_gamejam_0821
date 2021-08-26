@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
 use bevy::render::camera::PerspectiveProjection;
-use crate::{theater_outside::LevelReady, asset_loader, player::Player, level_collision::CollisionShape};
+use crate::{theater_outside::LevelReady, GameState, asset_loader, player::Player, level_collision::CollisionShape};
 
 pub mod fly_camera;
 
@@ -40,17 +40,10 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app//.add_plugin(PickingPlugin)
-           .add_system_set(
-               SystemSet::on_update(crate::AppState::InGame)
-                         .with_system(toggle_fly.system())
-           )
+           .add_system(toggle_fly.system())
            .add_system_set(
                SystemSet::on_enter(crate::AppState::InGame)
                          .with_system(reset_camera_on_enter_ingame.system())
-           )
-           .add_system_set(
-               SystemSet::on_update(crate::AppState::MainMenu)
-                         .with_system(toggle_fly.system())
            )
            .add_plugin(FlyCameraPlugin)
            .add_system(update_camera.system());
@@ -76,6 +69,7 @@ fn update_camera(
     player: Query<&Transform, (With<Player>, Without<MainCamera>)>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
+    game_state: Res<GameState>,
     level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
     level_info_state: Res<asset_loader::LevelInfoState>, 
 ) {
@@ -101,37 +95,39 @@ fn update_camera(
     let levels_asset = level_info_assets.get(&level_info_state.handle);
     if let Some(level_asset) = levels_asset  {
         for player in player.iter() {
-            for shape in level_asset.collision_info.shapes.iter() {
-                match shape {
-                    CollisionShape::Rect((r, c)) => {
-                        if let Some(c) = c {
-                            if player.translation.x >= r.bottom_x 
-                            && player.translation.x <= r.top_x 
-                            && player.translation.z <= r.right_z
-                            && player.translation.z >= r.left_z {
+            for (level, shape) in level_asset.collision_info.shapes.iter() {
+                if *level == game_state.current_level {
+                    match shape {
+                        CollisionShape::Rect((r, c)) => {
+                            if let Some(c) = c {
+                                if player.translation.x >= r.bottom_x 
+                                && player.translation.x <= r.top_x 
+                                && player.translation.z <= r.right_z
+                                && player.translation.z >= r.left_z {
 
-                                for (_e, _camera, mut transform) in cameras.iter_mut() {
-                                    transform.translation.x += 
-                                        (c.x - transform.translation.x) 
-                                       * c.speed
-                                       * time.delta_seconds();
-                                    transform.translation.y += 
-                                        (c.y - transform.translation.y) 
-                                       * c.speed
-                                       * time.delta_seconds();
-                                    transform.translation.z += 
-                                        (c.z - transform.translation.z) 
-                                       * c.speed
-                                       * time.delta_seconds();
+                                    for (_e, _camera, mut transform) in cameras.iter_mut() {
+                                        transform.translation.x += 
+                                            (c.x - transform.translation.x) 
+                                           * c.speed
+                                           * time.delta_seconds();
+                                        transform.translation.y += 
+                                            (c.y - transform.translation.y) 
+                                           * c.speed
+                                           * time.delta_seconds();
+                                        transform.translation.z += 
+                                            (c.z - transform.translation.z) 
+                                           * c.speed
+                                           * time.delta_seconds();
 
-                                    let end_rotation = Quat::from_axis_angle(Vec3::new(c.rotation_x, c.rotation_y, c.rotation_z), 
-                                                                             c.rotation_angle);
-                                    transform.rotation = transform.rotation.slerp(end_rotation, time.delta_seconds());
+                                        let end_rotation = Quat::from_axis_angle(Vec3::new(c.rotation_x, c.rotation_y, c.rotation_z), 
+                                                                                 c.rotation_angle);
+                                        transform.rotation = transform.rotation.slerp(end_rotation, time.delta_seconds());
+                                    }
                                 }
                             }
                         }
+                        _ => ()
                     }
-                    _ => ()
                 }
             }
         }
@@ -155,7 +151,7 @@ pub fn create_camera(
     transform.rotation = Quat::from_axis_angle(Vec3::new(-0.20287918, -0.9580786, -0.20229985), 1.6107514);
 
     if let Ok(mut camera_transform) = cameras.single_mut() {
-        *camera_transform = transform;
+        //*camera_transform = transform;
     } else {
         println!("Creating camera!");
 
@@ -167,6 +163,18 @@ pub fn create_camera(
             .insert(MainCamera {
                 current_followx_target: None,
                 current_followy_target: None
+            })
+            .with_children(|parent| {
+                parent.spawn_bundle(LightBundle {
+                    transform: Transform::from_xyz(0.0, 8.0, 0.0),
+                    light: Light {
+                        fov: 180.0,
+                        intensity: 1000.0,
+                        range: 1000.0,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                });
             });
     }
 //  // destroy any existing main cameras

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-
-use crate::{asset_loader, player, camera, level_collision, enemy, cutscene};
+use crate::{asset_loader, player, camera, level_collision, enemy, AppState, GameState,
+            level_collision::CollisionShape, cutscene, cutscene::CutsceneSegment };
 
 pub struct LevelReady(pub bool);
 pub struct TheaterOutsidePlugin;
@@ -39,6 +39,7 @@ impl Plugin for TheaterOutsidePlugin {
             .add_system_set(
                SystemSet::on_update(crate::AppState::InGame)
                     .with_system(player::player_input.system())
+                    .with_system(check_for_level_exit.system())
                     .with_system(player::player_movement_update.system())
                     .with_system(listen_for_level_reset.system())
                //.with_system(holdable::lift_holdable.system().label("handle_lift_events"))
@@ -49,6 +50,50 @@ impl Plugin for TheaterOutsidePlugin {
 #[derive(Default)]
 pub struct TheaterMeshes {
     pub outside: Handle<Mesh>,
+    pub lobby: Handle<Mesh>,
+    pub lobby_railing: Handle<Mesh>,
+    pub lobby_concession: Handle<Mesh>,
+    pub lobby_desk: Handle<Mesh>,
+    pub outside_material: Handle<StandardMaterial>,
+    pub lobby_material: Handle<StandardMaterial>,
+}
+
+pub fn check_for_level_exit(
+    player: Query<&Transform, With<player::Player>>,
+    level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
+    level_info_state: Res<asset_loader::LevelInfoState>, 
+    mut current_cutscene: ResMut<cutscene::CurrentCutscene>,
+    game_state: Res<GameState>,
+    mut state: ResMut<State<AppState>>,
+) {
+    let levels_asset = level_info_assets.get(&level_info_state.handle);
+    if let Some(level_asset) = levels_asset  {
+        for player in player.iter() {
+            for (level, shape) in level_asset.collision_info.shapes.iter() {
+                if *level == game_state.current_level {
+                    match shape {
+                        CollisionShape::LevelSwitch((r, _)) => {
+                            if player.translation.x >= r.bottom_x 
+                            && player.translation.x <= r.top_x 
+                            && player.translation.z <= r.right_z
+                            && player.translation.z >= r.left_z {
+                                println!("Level switch triggered!");
+                                current_cutscene.trigger(
+                                    vec!(
+                                        CutsceneSegment::CameraPosition((Vec3::ZERO, Quat::default(), 1.0)),
+                                        CutsceneSegment::LevelSwitch(cutscene::Level::Lobby),
+                                    )
+                                );
+
+                                state.push(AppState::Cutscene).unwrap();
+                            }
+                        }
+                        _ => ()
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn load_assets(
@@ -56,12 +101,33 @@ fn load_assets(
     asset_server: Res<AssetServer>,
     mut theater_meshes: ResMut<TheaterMeshes>,
     mut level_info_state: ResMut<asset_loader::LevelInfoState>, 
+    mut materials: ResMut<Assets<StandardMaterial>>,
     mut loading: ResMut<asset_loader::AssetsLoading>,
 ) {
     println!("Adding theater assets");
     theater_meshes.outside = asset_server.load("models/theater_outside.glb#Mesh0/Primitive0");
+    theater_meshes.lobby = asset_server.load("models/lobby.glb#Mesh0/Primitive0");
+    theater_meshes.lobby_railing = asset_server.load("models/lobby.glb#Mesh1/Primitive0");
+    theater_meshes.lobby_concession = asset_server.load("models/lobby.glb#Mesh2/Primitive0");
+    theater_meshes.lobby_desk = asset_server.load("models/lobby.glb#Mesh3/Primitive0");
+
+    let texture_handle = asset_server.load("models/theater_outside.png");
+    theater_meshes.outside_material = materials.add(StandardMaterial {
+        base_color_texture: Some(texture_handle.clone()),
+        ..Default::default()
+    });
+
+    let texture_handle = asset_server.load("models/lobby.png");
+    theater_meshes.lobby_material = materials.add(StandardMaterial {
+        base_color_texture: Some(texture_handle.clone()),
+        ..Default::default()
+    });
 
     loading.asset_handles.push(theater_meshes.outside.clone_untyped());
+    loading.asset_handles.push(theater_meshes.lobby.clone_untyped());
+    loading.asset_handles.push(theater_meshes.lobby_railing.clone_untyped());
+    loading.asset_handles.push(theater_meshes.lobby_concession.clone_untyped());
+    loading.asset_handles.push(theater_meshes.lobby_desk.clone_untyped());
 
     level_info_state.handle = asset_server.load("data/outside.lvl");
     asset_server.watch_for_changes().unwrap();
@@ -124,7 +190,7 @@ fn load_level(
     asset_server: Res<AssetServer>,
     mut level_info_state: ResMut<asset_loader::LevelInfoState>, 
     level_info_assets: ResMut<Assets<asset_loader::LevelInfo>>,
-
+    mut game_state: ResMut<GameState>,
     mut state: ResMut<State<crate::AppState>>,
 
 ) {
@@ -140,6 +206,7 @@ fn load_level(
         return;
     }
 
+    game_state.current_level = cutscene::Level::Outside;
     let color = Color::hex("072AC8").unwrap(); 
     let mut transform = Transform::identity();
 //  transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
@@ -153,7 +220,7 @@ fn load_level(
             .with_children(|parent|  {
                 parent.spawn_bundle(PbrBundle {
                     mesh: theater_meshes.outside.clone(),
-                    material: materials.add(color.into()),
+                    material: theater_meshes.outside_material.clone(),
                     transform: {
                         let mut t = Transform::default();
                         t.rotate(Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), std::f32::consts::PI));
@@ -163,10 +230,6 @@ fn load_level(
                     ..Default::default()
                 });
             }).id();
-
-    if let Some(outside) = meshes.get(theater_meshes.outside.clone()) {
-        println!("Indices: {:?}", outside.indices());
-    }
 
     player::spawn_player(&mut commands, &mut materials, &mut meshes, &person_meshes, 0, 1, 0);
     enemy::spawn_enemy(&mut commands, &mut materials, &mut meshes, &enemy_meshes, 5, 1, 0);
