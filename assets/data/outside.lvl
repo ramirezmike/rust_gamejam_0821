@@ -481,12 +481,153 @@ LevelInfo (
                              //             rotation_angle: 1.0331649,
                              //             speed: 0.8,
                              // ))))),
+
+                            (Lobby,
+                                LevelSwitch((RectangleCollision(
+                                    left_z: -48.7,
+                                    right_z: -10.7,
+                                    top_x: 50.0,
+                                    bottom_x: 48.5,
+                                    base_height: 0.0,
+                                    height: 0.0,
+                                ), Some(CameraPosition (
+                                            x: 0.0,
+                                            y: 15.5,
+                                            z: 0.0,
+                                            rotation_x: -0.20287918,
+                                            rotation_y: -0.9580786,
+                                            rotation_z: -0.20229985,
+                                            rotation_angle: 1.6107514,
+                                            speed: 0.8,
+                                ))))),
+
+                            // floor 0
+                            (Movie,
+                                Rect((RectangleCollision(
+                                    left_z: -8.0,
+                                    right_z: 8.0,
+                                    top_x: 1.5,
+                                    bottom_x: 0.0,
+                                    base_height: 0.0,
+                                    height: 0.0,
+                                ), None))),
+
+                            // floor 1
+                            (Movie,
+                                Rect((RectangleCollision(
+                                    left_z: -8.0,
+                                    right_z: 8.0,
+                                    top_x: 4.0,
+                                    bottom_x: 2.5,
+                                    base_height: 0.0,
+                                    height: 2.0,
+                                ), None))),
+
+                            // floor 2
+                            (Movie,
+                                Rect((RectangleCollision(
+                                    left_z: -8.0,
+                                    right_z: 8.0,
+                                    top_x: 6.5,
+                                    bottom_x: 5.0,
+                                    base_height: 0.0,
+                                    height: 4.0,
+                                ), None))),
+
+                            // floor 3
+                            (Movie,
+                                Rect((RectangleCollision(
+                                    left_z: -8.0,
+                                    right_z: 8.0,
+                                    top_x: 9.0,
+                                    bottom_x: 7.5,
+                                    base_height: 0.0,
+                                    height: 6.0,
+                                ), None))),
+
+                            // floor 4
+                            (Movie,
+                                Rect((RectangleCollision(
+                                    left_z: -8.0,
+                                    right_z: 8.0,
+                                    top_x: 11.5,
+                                    bottom_x: 10.0,
+                                    base_height: 0.0,
+                                    height: 8.0,
+                                ), None))),
+
+                            // floor 5
+                            (Movie,
+                                Rect((RectangleCollision(
+                                    left_z: -8.0,
+                                    right_z: 8.0,
+                                    top_x: 14.0,
+                                    bottom_x: 12.5,
+                                    base_height: 0.0,
+                                    height: 10.0,
+                                ), None))),
+
+                            // floor 6
+                            (Movie,
+                                Rect((RectangleCollision(
+                                    left_z: -8.0,
+                                    right_z: 8.0,
+                                    top_x: 16.5,
+                                    bottom_x: 15.0,
+                                    base_height: 0.0,
+                                    height: 12.0,
+                                ), None))),
+
+                            // floor 7
+                            (Movie,
+                                Rect((RectangleCollision(
+                                    left_z: -8.0,
+                                    right_z: 8.0,
+                                    top_x: 19.0,
+                                    bottom_x: 17.5,
+                                    base_height: 0.0,
+                                    height: 14.0,
+                                ), None))),
+
+                            // floor 8
+                            (Movie,
+                                Rect((RectangleCollision(
+                                    left_z: -10.0,
+                                    right_z: 10.0,
+                                    top_x: 21.5,
+                                    bottom_x: 20.0,
+                                    base_height: 0.0,
+                                    height: 16.0,
+                                ), None))),
+
+                            // Right stair
+                            (Movie,
+                                Stair(RectangleCollision(
+                                    left_z: 8.0,
+                                    right_z: 10.0,
+                                    top_x: 20.0,
+                                    bottom_x: 0.0,
+                                    base_height: 0.0,
+                                    height: 16.0,
+                                ))),
+
+                            // Left stair
+                            (Movie,
+                                Stair(RectangleCollision(
+                                    left_z: -10.0,
+                                    right_z: -8.0,
+                                    top_x: 20.0,
+                                    bottom_x: 0.0,
+                                    base_height: 0.0,
+                                    height: 16.0,
+                                ))),
                         ]
                     ),
     cutscenes: Cutscenes(
         cutscenes: [
             Cutscene (
                 location: (Vec2(5.0, 7.0), 1.0),
+                level: Outside,
                 has_been_triggered: false,
                 segments: [
                     Debug("test test ttest"),

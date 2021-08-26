@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
-use crate::{player,asset_loader,AppState, game_controller, camera, ChangeStateEvent};
+use crate::{player,asset_loader,AppState, game_controller, camera, ChangeStateEvent, GameState};
 
 pub struct CutsceneEvent {
 }
@@ -25,11 +25,12 @@ pub struct CurrentCutscene {
 }
 
 impl CurrentCutscene {
-    pub fn trigger(&mut self, segments: Vec::<CutsceneSegment>) {
+    pub fn trigger(&mut self, segments: Vec::<CutsceneSegment>, level: Level) {
         self.segment_index = 0;
         self.waiting = None;
         self.cutscene = Some(Cutscene {
                             location: (Vec2::ZERO, 0.0), 
+                            level,
                             has_been_triggered: false,
                             segments
                         });
@@ -54,6 +55,18 @@ impl Plugin for CutscenePlugin {
            .add_event::<CharacterDisplayEvent>()
            .add_system_set(
                SystemSet::on_update(crate::AppState::InGame)
+                   .with_system(check_for_cutscene.system())
+                   .with_system(debug_draw_cutscene_triggers.system())
+
+           )
+           .add_system_set(
+               SystemSet::on_update(crate::AppState::Lobby)
+                   .with_system(check_for_cutscene.system())
+                   .with_system(debug_draw_cutscene_triggers.system())
+
+           )
+           .add_system_set(
+               SystemSet::on_update(crate::AppState::Movie)
                    .with_system(check_for_cutscene.system())
                    .with_system(debug_draw_cutscene_triggers.system())
 
@@ -159,6 +172,10 @@ pub fn update_cutscene(
                             Level::Lobby => {
                                 change_state_event_writer.send(ChangeStateEvent { target: AppState::Lobby });
                             },
+                            Level::Movie => {
+                                println!("Changing to movie state");
+                                change_state_event_writer.send(ChangeStateEvent { target: AppState::Movie });
+                            },
                             _ => ()
                         }
                     },
@@ -220,9 +237,7 @@ pub fn handle_character_display_event(
     person_meshes: Res<player::PersonMeshes>,
     main_camera: Query<Entity, With<camera::MainCamera>>,
 ) {
-    println!("Camera count: {}", main_camera.iter().count());
     for camera_entity in main_camera.iter() {
-        println!("iterating cmaeras");
         for event in character_display_event_reader.iter() {
             println!("Received display character event");
             let color = Color::hex("FCF300").unwrap(); 
@@ -366,13 +381,14 @@ pub fn check_for_cutscene(
     level_info_state: Res<asset_loader::LevelInfoState>, 
     mut level_info_assets: ResMut<Assets<asset_loader::LevelInfo>>,
     mut state: ResMut<State<AppState>>,
+    game_state: Res<GameState>,
     mut current_cutscene: ResMut<CurrentCutscene>,
 ) {
     if let Some(levels_asset) = level_info_assets.get_mut(&level_info_state.handle) {
         for player in player.iter() {
             let player_position = Vec2::new(player.translation.x, player.translation.z);
             for mut cutscene in levels_asset.cutscenes.cutscenes.iter_mut() {
-                if cutscene.has_been_triggered { continue; }
+                if cutscene.level != game_state.current_level || cutscene.has_been_triggered { continue; }
 
                 let (location, distance) = cutscene.location;
                 if player_position.distance(location) < distance {
@@ -475,6 +491,7 @@ pub fn debug_draw_cutscene_triggers(
     mut cooldown: Local<usize>,
     level_info_state: Res<asset_loader::LevelInfoState>, 
     level_info_assets: ResMut<Assets<asset_loader::LevelInfo>>,
+    game_state: Res<GameState>,
 
     trigger_meshes: Query<Entity, With<DebugCutsceneTriggerMesh>>, 
 ) {
@@ -490,6 +507,9 @@ pub fn debug_draw_cutscene_triggers(
         if *is_drawing {
             if let Some(levels_asset) = level_info_assets.get(&level_info_state.handle) {
                 for cutscene in levels_asset.cutscenes.cutscenes.iter() {
+
+                    if cutscene.level != game_state.current_level { continue; }
+
                     let (location, _distance) = cutscene.location;
                     let color = Color::hex("5F0550").unwrap(); 
                     let color = Color::rgba(color.r(), color.g(), color.b(), 0.5);
@@ -499,7 +519,7 @@ pub fn debug_draw_cutscene_triggers(
                                 transform: Transform::from_xyz(location.x, 1.5, location.y),
                                 visible: Visible {
                                     is_visible: true,
-                                    is_transparent: true,
+                                    is_transparent: !cutscene.has_been_triggered,
                                 },
                                 ..Default::default()
                             })
@@ -524,6 +544,7 @@ pub struct Cutscenes {
 #[uuid = "49cbdc56-aa9c-3543-8640-a018b74b5052"]
 pub struct Cutscene {
     location: (Vec2, f32), // X,Z and distance to trigger
+    level: Level,
     has_been_triggered: bool,
     segments: Vec::<CutsceneSegment>
 }
@@ -546,7 +567,7 @@ pub enum CutsceneSegment {
 pub enum Level {
     Outside,
     Lobby,
-    Theater,
+    Movie,
 }
 
 #[derive(Debug, Clone, Deserialize, TypeUuid)]
