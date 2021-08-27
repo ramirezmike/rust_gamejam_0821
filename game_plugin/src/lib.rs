@@ -5,6 +5,7 @@ use bevy::app::Events;
 use bevy::reflect::{TypeUuid};
 use bevy::window::WindowMode;
 use serde::Deserialize;
+use std::collections::HashMap;
 
 mod camera;
 pub mod asset_loader;
@@ -20,6 +21,7 @@ pub mod enemy;
 pub mod game_settings;
 pub mod level_collision;
 pub mod lobby;
+pub mod follow_text;
 mod menu;
 mod theater_outside; 
 
@@ -54,7 +56,10 @@ impl Plugin for GamePlugin {
 //         .add_plugin(DebugLinesPlugin)
            .init_resource::<menu::ButtonMaterials>()
            .init_resource::<asset_loader::LevelInfoState>()
+           .init_resource::<follow_text::FollowText>()
            .add_event::<ChangeStateEvent>()
+           .add_event::<LevelResetEvent>()
+           .add_event::<follow_text::FollowTextEvent>()
 
            .init_resource::<player::PersonMeshes>()
            .add_event::<credits::CreditsEvent>()
@@ -107,6 +112,9 @@ impl Plugin for GamePlugin {
            )
            .add_system(handle_change_state_event.system())
            .add_system(debug_move_entity.system())
+           .add_system(handle_level_reset_event.system())
+           .add_system(follow_text::update_follow_text.system())
+           .add_system(follow_text::handle_follow_text_event.system())
            .add_plugin(theater_outside::TheaterOutsidePlugin)
            .add_plugin(lobby::LobbyPlugin)
            .add_plugin(movie::MoviePlugin)
@@ -118,18 +126,38 @@ impl Plugin for GamePlugin {
 
            .init_resource::<asset_loader::AssetsLoading>()
            .insert_resource(GameState {
-               current_level: cutscene::Level::Outside
+               current_level: cutscene::Level::Outside,
+               mode: Mode::Follow,
+               controlling: Kid::A,
+               last_positions: HashMap::new()
            })
            .add_asset::<asset_loader::LevelInfo>()
            .init_asset_loader::<asset_loader::LevelsAssetLoader>()
-
 
            .add_system(exit.system());
     }
 }
 
+pub struct LevelResetEvent;
+
 pub struct GameState {
-    current_level: cutscene::Level
+    pub current_level: cutscene::Level,
+    pub mode: Mode, 
+    pub controlling: Kid,
+    pub last_positions: HashMap<Kid, Option::<Vec3>>
+}
+
+#[derive(Copy, Clone, PartialEq, Hash, Eq, Debug)]
+pub enum Kid {
+    A,
+    B,
+    C,
+    D,
+}
+
+pub enum Mode {
+    Follow,
+    Switch
 }
 
 fn exit(keys: Res<Input<KeyCode>>, mut exit: ResMut<Events<AppExit>>) {
@@ -239,12 +267,28 @@ pub fn handle_change_state_event(
     }
 }
 
+pub fn handle_level_reset_event(
+    mut level_reset_event_reader: EventReader<LevelResetEvent>,
+    mut players: Query<(&mut player::Player, &mut Transform)>,
+    mut follow_text: ResMut<follow_text::FollowText>,
+    game_state: Res<GameState>,
+) {
+    for _ in level_reset_event_reader.iter() {
+        for (mut player, mut transform) in players.iter_mut() {
+            transform.translation = game_state.last_positions[&player.kid].unwrap_or(transform.translation);
+            player.velocity = Vec3::default();
+            player.movement = None;
+            follow_text.lock = 0.0;
+        }
+    }
+}
 
 pub fn debug_move_entity(
     keyboard_input: Res<Input<KeyCode>>,
     mut entities: Query<&mut Transform, With<player::Player>>,
     time: Res<Time>,
 ) {
+    return;
     for mut transform in entities.iter_mut() {
         if keyboard_input.pressed(KeyCode::Left) {
             transform.translation.z -= 0.1; 

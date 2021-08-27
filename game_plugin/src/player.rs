@@ -1,10 +1,12 @@
 use bevy::prelude::*;
+use rand::seq::SliceRandom;
 
-use crate::{Direction, game_controller, game_settings, asset_loader, level_collision, GameState};
+use crate::{Direction, game_controller, game_settings, asset_loader, level_collision, GameState, theater_outside, Kid, Mode};
 
 pub struct Player {
-    movement: Option::<Direction>,
-    velocity: Vec3,
+    pub kid: Kid,
+    pub movement: Option::<Direction>,
+    pub velocity: Vec3,
 }
 
 pub static SCALE: f32 = 0.36;
@@ -30,34 +32,69 @@ pub fn spawn_player(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     meshes: &mut ResMut<Assets<Mesh>>,
     person_meshes: &Res<PersonMeshes>,
+    theater_meshes: &ResMut<theater_outside::TheaterMeshes>,
+    game_state: &ResMut<GameState>,
 
-    x: usize,
-    y: usize,
-    z: usize,
 ) {
     let color = Color::hex("FCF300").unwrap(); 
 
-    let mut transform = Transform::from_translation(Vec3::new(x as f32, y as f32, z as f32));
-    transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
-    transform.rotate(Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), std::f32::consts::PI));
-    let inner_mesh_vertical_offset = 1.0;
-    let player_entity = 
-    commands.spawn_bundle(PbrBundle {
-                transform,
-                ..Default::default()
-            })
-            .insert(Player {
-                movement: None,
-                velocity: Vec3::default()
-            })
-            .with_children(|parent|  {
-                parent.spawn_bundle(PbrBundle {
-                    mesh: person_meshes.person.clone(),
-                    material: materials.add(color.into()),
-                    transform: Transform::from_xyz(0.0, 0.5, 0.0),
+    let kids = vec!(Kid::A, Kid::B, Kid::C, Kid::D);
+
+    for (i, kid) in kids.iter().enumerate() {
+        let position = game_state.last_positions[kid].unwrap();
+        let mut transform = Transform::from_translation(position);
+        transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
+        transform.rotate(Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), std::f32::consts::PI));
+        let player_entity = 
+        commands.spawn_bundle(PbrBundle {
+                    transform,
                     ..Default::default()
-                });
-            }).id();
+                })
+                .insert(Player {
+                    kid: *kid,
+                    movement: None,
+                    velocity: Vec3::default()
+                })
+                .with_children(|parent|  {
+                    parent.spawn_bundle(PbrBundle {
+                        mesh: theater_meshes.kid_legs.clone(),
+                        material: materials.add(color.into()),
+                        ..Default::default()
+                    });
+                    parent.spawn_bundle(PbrBundle {
+                        mesh: theater_meshes.kid_torso.clone(),
+                        material: materials.add(color.into()),
+                        ..Default::default()
+                    });
+                    parent.spawn_bundle(PbrBundle {
+                        mesh: theater_meshes.kid_headhand.clone(),
+                        material: materials.add(color.into()),
+                        ..Default::default()
+                    });
+                    parent.spawn_bundle(PbrBundle {
+                        mesh: if *kid == Kid::D {
+                                theater_meshes.kid_hairtwo.clone()
+                              } else {
+                                  // omg this is gross
+                                  let mut rng = rand::thread_rng();
+                                  let mut nums: Vec<i32> = (0..1).collect();
+                                  nums.shuffle(&mut rng);
+                                  if *nums.last().unwrap() == 0{
+                                      theater_meshes.kid_hairone.clone()
+                                  } else {
+                                      theater_meshes.kid_hairtwo.clone()
+                                  }
+                              },
+                        material: materials.add(color.into()),
+                        ..Default::default()
+                    });
+                    parent.spawn_bundle(PbrBundle {
+                        mesh: theater_meshes.kid_face.clone(),
+                        material: theater_meshes.face_material.clone(),
+                        ..Default::default()
+                    });
+                }).id();
+    }
 }
 
 pub fn player_movement_update(
@@ -68,58 +105,164 @@ pub fn player_movement_update(
     level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
     level_info_state: Res<asset_loader::LevelInfoState>, 
 ) {
-    for (mut player, mut transform) in player.iter_mut() {
-        if let Some(movement) = player.movement {
-            let mut acceleration = Vec3::default();
-            match movement {
-                Direction::Up => {
-                    acceleration += Vec3::new(1.0, 0.0, 0.0);
-                },
-                Direction::Down => {
-                    acceleration += Vec3::new(-1.0, 0.0, 0.0);
-                },
-                Direction::Right => {
-                    acceleration += Vec3::new(0.0, 0.0, 1.0);
-                },
-                Direction::Left => {
-                    acceleration += Vec3::new(0.0, 0.0, -1.0);
-                },
-                _ => ()
-            } 
+    match game_state.mode {
+        Mode::Follow => {
+            let mut controlling_kid_position = Vec3::default();
+            let mut move_away_from = vec!();
+            for (player, transform) in player.iter_mut() {
+                if player.kid ==  game_state.controlling {
+                    controlling_kid_position = transform.translation;
+                } else {
+                    move_away_from.push((player.kid, transform.translation)); 
+                }
+            }
 
-            player.velocity += (acceleration * settings.player_speed) * time.delta_seconds();
-            player.movement = None;
-        } else {
-            player.velocity *= settings.player_friction.powf(time.delta_seconds());
+            for (mut player, mut transform) in player.iter_mut() {
+                if player.kid ==  game_state.controlling {
+                    move_player_controlled_kid(&mut player, &mut transform, &game_state, &settings, 
+                                               &level_info_assets, &level_info_state, &time);
+                } else {
+                    move_non_player_controlled_kid(&mut player, &mut transform, &controlling_kid_position, 
+                                                   &move_away_from, &game_state, &settings, 
+                                                   &level_info_assets, &level_info_state, &time);
+                }
+            }
+        },
+        Mode::Switch => {
+            for (mut player, mut transform) in player.iter_mut() {
+                if player.kid ==  game_state.controlling {
+                    move_player_controlled_kid(&mut player, &mut transform, &game_state, &settings, 
+                                               &level_info_assets, &level_info_state, &time);
+                }
+            }
+        }
+    }
+}
+
+pub fn move_non_player_controlled_kid(
+    player: &mut Player, 
+    mut transform: &mut Transform, 
+    controlling_kid_position: &Vec3,
+    move_away_from: &Vec::<(Kid, Vec3)>,
+    game_state: &Res<GameState>,
+    settings: &Res<game_settings::GameSettings>,
+    level_info_assets: &Res<Assets<asset_loader::LevelInfo>>,
+    level_info_state: &Res<asset_loader::LevelInfoState>, 
+    time: &Res<Time>,
+) {
+    let direction = *controlling_kid_position - transform.translation;
+    let distance = direction.length();
+    if distance > 3.0 {
+        player.velocity += (direction * settings.player_speed) * time.delta_seconds();
+    } else {
+        player.velocity = Vec3::ZERO;
+    }
+    for (kid, translation) in move_away_from.iter() {
+        if *kid != player.kid {
+            let direction = transform.translation - *translation;
+            let distance = direction.length();
+            if distance < 1.5 {
+                player.velocity += (direction * settings.player_speed) * time.delta_seconds();
+            } 
+        }
+    }
+
+
+    player.velocity.clamp_length_max(settings.player_speed * 0.01);
+    let new_translation = transform.translation + player.velocity;
+
+    let levels_asset = level_info_assets.get(&level_info_state.handle);
+    if let Some(level_asset) = levels_asset  {
+        let temp_new_translation = new_translation;
+        let new_translation = level_collision::fit_in_level(&level_asset, &game_state, transform.translation, new_translation);
+        if temp_new_translation.x != new_translation.x {
+            player.velocity.x = 0.0;
+        }
+        if temp_new_translation.y != new_translation.y {
+            player.velocity.y = 0.0;
+        }
+        if temp_new_translation.z != new_translation.z {
+            player.velocity.z = 0.0;
         }
 
-        let new_translation = transform.translation + player.velocity;
+        // wow, this actually works?
+        let angle = (-(new_translation.z - transform.translation.z)).atan2(new_translation.x - transform.translation.x);
+        let rotation = Quat::from_axis_angle(Vec3::Y, angle);
 
-        let levels_asset = level_info_assets.get(&level_info_state.handle);
-        if let Some(level_asset) = levels_asset  {
-            let temp_new_translation = new_translation;
-            let new_translation = level_collision::fit_in_level(&level_asset, &game_state, transform.translation, new_translation);
-            if temp_new_translation.x != new_translation.x {
-                player.velocity.x = 0.0;
-            }
-            if temp_new_translation.y != new_translation.y {
-                player.velocity.y = 0.0;
-            }
-            if temp_new_translation.z != new_translation.z {
-                player.velocity.z = 0.0;
-            }
-
-            // wow, this actually works?
-            let angle = (-(new_translation.z - transform.translation.z)).atan2(new_translation.x - transform.translation.x);
-            let rotation = Quat::from_axis_angle(Vec3::Y, angle);
+        if new_translation.length() > 0.001 {
             transform.translation = new_translation; 
+        } 
 
-            let new_rotation = transform.rotation.lerp(rotation, time.delta_seconds());
-            if !new_rotation.is_nan() {
-                transform.rotation = rotation;
-            }
-         }
+        let new_rotation = transform.rotation.lerp(rotation, time.delta_seconds());
 
+        // don't rotate if we're not moving or if uhh rotation isnt a number
+        if !new_rotation.is_nan() && player.velocity.length() > 0.01 {
+            transform.rotation = rotation;
+        }
+    }
+}
+
+pub fn move_player_controlled_kid(
+    mut player: &mut Player, 
+    mut transform: &mut Transform, 
+    game_state: &Res<GameState>,
+    settings: &Res<game_settings::GameSettings>,
+    level_info_assets: &Res<Assets<asset_loader::LevelInfo>>,
+    level_info_state: &Res<asset_loader::LevelInfoState>, 
+    time: &Res<Time>,
+) {
+    if let Some(movement) = player.movement {
+        let mut acceleration = Vec3::default();
+        match movement {
+            Direction::Up => {
+                acceleration += Vec3::new(1.0, 0.0, 0.0);
+            },
+            Direction::Down => {
+                acceleration += Vec3::new(-1.0, 0.0, 0.0);
+            },
+            Direction::Right => {
+                acceleration += Vec3::new(0.0, 0.0, 1.0);
+            },
+            Direction::Left => {
+                acceleration += Vec3::new(0.0, 0.0, -1.0);
+            },
+            _ => ()
+        } 
+
+        player.velocity += (acceleration * settings.player_speed) * time.delta_seconds();
+        player.movement = None;
+    } else {
+        player.velocity *= settings.player_friction.powf(time.delta_seconds());
+    }
+
+    player.velocity.clamp_length_max(settings.player_speed);
+    let new_translation = transform.translation + player.velocity;
+
+    let levels_asset = level_info_assets.get(&level_info_state.handle);
+    if let Some(level_asset) = levels_asset  {
+        let temp_new_translation = new_translation;
+        let new_translation = level_collision::fit_in_level(&level_asset, &game_state, transform.translation, new_translation);
+        if temp_new_translation.x != new_translation.x {
+            player.velocity.x = 0.0;
+        }
+        if temp_new_translation.y != new_translation.y {
+            player.velocity.y = 0.0;
+        }
+        if temp_new_translation.z != new_translation.z {
+            player.velocity.z = 0.0;
+        }
+
+        // wow, this actually works?
+        let angle = (-(new_translation.z - transform.translation.z)).atan2(new_translation.x - transform.translation.x);
+        let rotation = Quat::from_axis_angle(Vec3::Y, angle);
+        transform.translation = new_translation; 
+
+        let new_rotation = transform.rotation.lerp(rotation, time.delta_seconds());
+
+        // don't rotate if we're not moving or if uhh rotation isnt a number
+        if !new_rotation.is_nan() && player.velocity.length() > 0.0001 {
+            transform.rotation = rotation;
+        }
     }
 }
 
@@ -133,6 +276,7 @@ pub fn player_input(
     mut down_buffer: Local<Option::<u128>>,
     mut right_buffer: Local<Option::<u128>>,
     mut left_buffer: Local<Option::<u128>>,
+    mut game_state: ResMut<GameState>,
     axes: Res<Axis<GamepadAxis>>,
     buttons: Res<Input<GamepadButton>>,
     gamepad: Option<Res<game_controller::GameController>>,
@@ -173,17 +317,33 @@ pub fn player_input(
 
     let pressed_buttons = game_controller::get_pressed_buttons(&axes, &buttons, gamepad);
     for mut player in player.iter_mut() {
-        if (keyboard_input.just_pressed(KeyCode::Space) 
-        || keyboard_input.just_pressed(KeyCode::Return) 
-        || keyboard_input.just_pressed(KeyCode::J) 
-        || pressed_buttons.contains(&game_controller::GameButton::Action))
-        && action_buffer.is_none() {
-            *action_buffer = Some(time.time_since_startup().as_millis());
-            continue;
-        }
+        if player.kid != game_state.controlling { continue; }
 
         if !action_buffer.is_none() {
             continue;
+        }
+
+        if (keyboard_input.just_pressed(KeyCode::Space) 
+        || keyboard_input.just_pressed(KeyCode::Return) 
+        || keyboard_input.just_pressed(KeyCode::J) 
+        || keyboard_input.just_pressed(KeyCode::K) 
+        || pressed_buttons.contains(&game_controller::GameButton::Action)
+        || pressed_buttons.contains(&game_controller::GameButton::Switch))
+        && action_buffer.is_none() {
+            *action_buffer = Some(time.time_since_startup().as_millis());
+        }
+
+        if keyboard_input.just_pressed(KeyCode::K) || pressed_buttons.contains(&game_controller::GameButton::Switch) {
+            println!("Pressed K");
+            game_state.controlling = 
+                match game_state.controlling {
+                    Kid::A => Kid::B,
+                    Kid::B => Kid::C,
+                    Kid::C => Kid::D,
+                    Kid::D => Kid::A,
+                };
+            player.velocity = Vec3::default();
+            player.movement = None;
         }
 
         let mut move_dir = None;

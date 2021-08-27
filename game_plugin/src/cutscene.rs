@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
-use crate::{player,asset_loader,AppState, game_controller, camera, ChangeStateEvent, GameState};
+use crate::{player,asset_loader,AppState, game_controller, camera, ChangeStateEvent, GameState, LevelResetEvent};
 
 pub struct CutsceneEvent {
 }
@@ -101,6 +101,7 @@ pub fn update_cutscene(
 
     mut speechbox_event_writer: EventWriter<SpeechBoxEvent>, 
     mut character_display_event_writer: EventWriter<CharacterDisplayEvent>, 
+    mut level_reset_event_writer: EventWriter<LevelResetEvent>,
     mut change_state_event_writer: EventWriter<ChangeStateEvent>,
     mut cameras: Query<&mut Transform, With<camera::MainCamera>>,
     mut action_buffer: Local<Option::<u128>>,
@@ -160,6 +161,10 @@ pub fn update_cutscene(
                     CutsceneSegment::Textbox(text) => {
                         speechbox_event_writer.send(SpeechBoxEvent { text: Some(text.to_string()) });
                         current_cutscene.waiting = Some(CutsceneWait::Interaction);
+                    },
+                    CutsceneSegment::LevelReset => {
+                        level_reset_event_writer.send(LevelResetEvent);
+                        current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
                     },
                     CutsceneSegment::CharacterPosition(character, position) => {
                         character_display_event_writer.send(CharacterDisplayEvent {
@@ -558,11 +563,12 @@ pub enum CutsceneSegment {
     LevelSwitch(Level),
     Speech(String, Character),
     Clear(Character),
+    LevelReset,
     Debug(String),
     Delay(f32),
 }
 
-#[derive(Debug, Clone, Deserialize, TypeUuid, PartialEq)]
+#[derive(Debug, Copy, Clone, Deserialize, TypeUuid, PartialEq)]
 #[uuid = "21cbdf56-aa9c-3543-8640-bbbbb74b5052"]
 pub enum Level {
     Outside,

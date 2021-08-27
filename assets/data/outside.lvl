@@ -638,5 +638,31 @@ LevelInfo (
                 ],
             ),
         ]
-    )
+    ),
+    enemies: [
+        EnemySpawnPoint(
+            level: Lobby,
+            location: (9.0, 0.0),
+            enemy_type: Ticket,
+            facing: Down,
+        ),
+        EnemySpawnPoint(
+            level: Lobby,
+            location: (20.0, -14.5),
+            enemy_type: Patrol([
+//                          (20.0, -14.5),
+//                          (30.0, -14.5),
+                        ]),
+            facing: Down,
+        ),
+        EnemySpawnPoint(
+            level: Lobby,
+            location: (7.0, -4.0),
+            enemy_type: Patrol([
+                            (7.0, -4.0),
+                            (7.0, 4.0),
+                        ]),
+            facing: Down,
+        ),
+    ]
 )

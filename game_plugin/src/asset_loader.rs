@@ -4,7 +4,7 @@ use bevy::reflect::{TypeUuid};
 use bevy::utils::{BoxedFuture};
 use serde::Deserialize;
 
-use crate::{level_collision, cutscene};
+use crate::{level_collision, cutscene, enemy};
 
 
 // this is for hot reloading
@@ -70,5 +70,6 @@ pub struct LevelInfoState {
 pub struct LevelInfo {
     pub collision_info: level_collision::LevelCollisionInfo,
     pub cutscenes: cutscene::Cutscenes,
+    pub enemies: Vec::<enemy::EnemySpawnPoint>,
 }
 

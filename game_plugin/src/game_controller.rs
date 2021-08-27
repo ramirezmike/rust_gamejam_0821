@@ -36,7 +36,7 @@ pub fn gamepad_connections(
 
 #[derive(PartialEq)]
 pub enum GameButton {
-    Up, Down, Left, Right, Action, Nothing, Start
+    Up, Down, Left, Right, Action, Switch, Nothing, Start
 }
 
 pub fn get_pressed_buttons(
@@ -128,8 +128,12 @@ pub fn get_pressed_buttons(
     let action_1 = GamepadButton(gamepad, GamepadButtonType::South);
     let action_2 = GamepadButton(gamepad, GamepadButtonType::East);
 
-    if buttons.just_pressed(action_1) || buttons.just_pressed(action_2) {
+    if buttons.just_pressed(action_1) {
         pressed_buttons.push(GameButton::Action);
+    }
+
+    if buttons.just_pressed(action_2) {
+        pressed_buttons.push(GameButton::Switch);
     }
 
     let start_button = GamepadButton(gamepad, GamepadButtonType::Start);

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{enemy, cutscene, player, theater_outside, asset_loader, camera, level_collision, GameState};
+use crate::{enemy, cutscene, player, theater_outside, asset_loader, camera, level_collision, GameState, Mode, Kid, };
 
 /*
 camera_x: -11.483573,
@@ -20,6 +20,7 @@ impl Plugin for MoviePlugin {
                     .with_system(load_level.system().label("loading_level"))
                     .with_system(crate::camera::create_camera.system().after("loading_level"))
                     .with_system(set_clear_color.system().after("loading_level"))
+                    .with_system(enemy::spawn_enemies.system().after("loading_level"))
             )
             .add_system_set(
                 SystemSet::on_exit(crate::AppState::Movie)
@@ -93,6 +94,8 @@ fn load_level(
     }
 
     game_state.current_level = cutscene::Level::Movie;
+    game_state.mode = Mode::Switch;
+
     let color = Color::hex("072AC8").unwrap(); 
     let mut transform = Transform::identity();
 //  transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
@@ -118,9 +121,14 @@ fn load_level(
                 });
             }).id();
 
-
-    player::spawn_player(&mut commands, &mut materials, &mut meshes, &person_meshes, 0, 1, 0);
-    enemy::spawn_enemy(&mut commands, &mut materials, &mut meshes, &enemy_meshes, 5, 1, 0);
+    game_state.last_positions = [
+                (Kid::A, Some(Vec3::new(0.0, 0.0, 0.0))), 
+                (Kid::B, Some(Vec3::new(0.0, 0.0, -1.0))),
+                (Kid::C, Some(Vec3::new(0.0, 0.0, 0.5))), 
+                (Kid::D, Some(Vec3::new(0.0, 0.0, -0.5))),
+    ].iter().cloned().collect();
+    player::spawn_player(&mut commands, &mut materials, &mut meshes, 
+                         &person_meshes, &theater_meshes, &game_state);
 }
 
 fn set_clear_color(
@@ -133,6 +141,7 @@ fn cleanup_environment(
     mut commands: Commands,
     level_mesh: Query<Entity, With<Movie>>,
     player: Query<Entity, With<player::Player>>,
+    enemy: Query<Entity, With<enemy::Enemy>>,
     camera: Query<Entity, With<camera::MainCamera>>,
     collision_meshes: Query<Entity, With<level_collision::DebugLevelCollisionMesh>>, 
 ) {
@@ -141,6 +150,10 @@ fn cleanup_environment(
     }
 
     for entity in player.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    for entity in enemy.iter() {
         commands.entity(entity).despawn_recursive();
     }
 

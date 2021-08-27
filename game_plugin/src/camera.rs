@@ -6,19 +6,6 @@ use crate::{theater_outside::LevelReady, GameState, asset_loader, player::Player
 
 pub mod fly_camera;
 
-pub struct CameraTarget;
-
-#[derive(Debug, Clone, Deserialize, TypeUuid)]
-#[uuid = "59cadc56-aa9c-4543-8640-a018b74b5052"] // this needs to be actually generated
-pub enum CameraBehavior {
-    Static,
-    LockFollowX(f32, f32),
-    LockFollowY(f32, f32, f32),
-    FollowY(f32),
-    FollowZ(f32),
-    LooseFollowX(f32),
-    MoveToX(f32),
-}
 
 #[derive(Debug, Clone, Deserialize, TypeUuid)]
 #[uuid = "522adc56-aa9c-4543-8640-a018b74b5052"] // this needs to be actually generated
@@ -66,7 +53,7 @@ fn lerp(a: f32, b: f32, f: f32) -> f32 {
 fn update_camera(
     mut cameras: Query<(Entity, &mut MainCamera, &mut Transform), Without<Player>>,
     fly_camera: Query<&fly_camera::FlyCamera>,
-    player: Query<&Transform, (With<Player>, Without<MainCamera>)>,
+    player: Query<(&Transform, &Player), Without<MainCamera>>,
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
     game_state: Res<GameState>,
@@ -94,39 +81,41 @@ fn update_camera(
 
     let levels_asset = level_info_assets.get(&level_info_state.handle);
     if let Some(level_asset) = levels_asset  {
-        for player in player.iter() {
-            for (level, shape) in level_asset.collision_info.shapes.iter() {
-                if *level == game_state.current_level {
-                    match shape {
-                        CollisionShape::Rect((r, c)) => {
-                            if let Some(c) = c {
-                                if player.translation.x >= r.bottom_x 
-                                && player.translation.x <= r.top_x 
-                                && player.translation.z <= r.right_z
-                                && player.translation.z >= r.left_z {
+        for (transform, player) in player.iter() {
+            if player.kid == game_state.controlling {
+                for (level, shape) in level_asset.collision_info.shapes.iter() {
+                    if *level == game_state.current_level {
+                        match shape {
+                            CollisionShape::Rect((r, c)) => {
+                                if let Some(c) = c {
+                                    if transform.translation.x >= r.bottom_x 
+                                    && transform.translation.x <= r.top_x 
+                                    && transform.translation.z <= r.right_z
+                                    && transform.translation.z >= r.left_z {
 
-                                    for (_e, _camera, mut transform) in cameras.iter_mut() {
-                                        transform.translation.x += 
-                                            (c.x - transform.translation.x) 
-                                           * c.speed
-                                           * time.delta_seconds();
-                                        transform.translation.y += 
-                                            (c.y - transform.translation.y) 
-                                           * c.speed
-                                           * time.delta_seconds();
-                                        transform.translation.z += 
-                                            (c.z - transform.translation.z) 
-                                           * c.speed
-                                           * time.delta_seconds();
+                                        for (_e, _camera, mut transform) in cameras.iter_mut() {
+                                            transform.translation.x += 
+                                                (c.x - transform.translation.x) 
+                                               * c.speed
+                                               * time.delta_seconds();
+                                            transform.translation.y += 
+                                                (c.y - transform.translation.y) 
+                                               * c.speed
+                                               * time.delta_seconds();
+                                            transform.translation.z += 
+                                                (c.z - transform.translation.z) 
+                                               * c.speed
+                                               * time.delta_seconds();
 
-                                        let end_rotation = Quat::from_axis_angle(Vec3::new(c.rotation_x, c.rotation_y, c.rotation_z), 
-                                                                                 c.rotation_angle);
-                                        transform.rotation = transform.rotation.slerp(end_rotation, time.delta_seconds());
+                                            let end_rotation = Quat::from_axis_angle(Vec3::new(c.rotation_x, c.rotation_y, c.rotation_z), 
+                                                                                     c.rotation_angle);
+                                            transform.rotation = transform.rotation.slerp(end_rotation, time.delta_seconds());
+                                        }
                                     }
                                 }
                             }
+                            _ => ()
                         }
-                        _ => ()
                     }
                 }
             }
