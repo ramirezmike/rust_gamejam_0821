@@ -70,6 +70,7 @@ pub struct TheaterMeshes {
     pub hat: Handle<Mesh>,
     pub face: Handle<Mesh>,
     pub face_material: Handle<StandardMaterial>,
+    pub talk_material: Handle<StandardMaterial>,
 
     pub kid_legs: Handle<Mesh>,
     pub kid_torso: Handle<Mesh>,
@@ -100,12 +101,11 @@ pub fn check_for_level_exit(
                                 && transform.translation.z <= r.right_z
                                 && transform.translation.z >= r.left_z {
                                     println!("Level switch triggered!");
-                                    let camera_rotation =
-                                        Quat::from_axis_angle(Vec3::new(-0.020942269, -0.9995644, -0.020797854), 1.5643123);
 
                                     current_cutscene.trigger(
                                         vec!(
-                                            CutsceneSegment::CameraPosition((Vec3::new(8.684685, 1.7965136, -0.079336877), camera_rotation, 1.0)),
+                                            CutsceneSegment::CameraPosition(8.684685, 1.7965136, -0.079336877, 
+                                                    -0.020942269, -0.9995644, -0.020797854,1.5643123 , 1.0),
                                             CutsceneSegment::LevelSwitch(cutscene::Level::Lobby),
                                         ),
                                         cutscene::Level::Outside
@@ -145,16 +145,17 @@ fn load_assets(
     theater_meshes.torso = asset_server.load("models/person.glb#Mesh1/Primitive0");
     theater_meshes.headhand = asset_server.load("models/person.glb#Mesh2/Primitive0");
     theater_meshes.hairone = asset_server.load("models/person.glb#Mesh3/Primitive0");
-    theater_meshes.hairtwo = asset_server.load("models/person.glb#Mesh4/Primitive0");
-    theater_meshes.hat = asset_server.load("models/person.glb#Mesh5/Primitive0");
-    theater_meshes.face = asset_server.load("models/person.glb#Mesh6/Primitive0");
+    theater_meshes.hat = asset_server.load("models/person.glb#Mesh4/Primitive0");
+    theater_meshes.face = asset_server.load("models/person.glb#Mesh5/Primitive0");
 
-    theater_meshes.kid_legs = asset_server.load("models/person.glb#Mesh11/Primitive0");
-    theater_meshes.kid_torso = asset_server.load("models/person.glb#Mesh12/Primitive0");
-    theater_meshes.kid_headhand = asset_server.load("models/person.glb#Mesh10/Primitive0");
-    theater_meshes.kid_hairone = asset_server.load("models/person.glb#Mesh8/Primitive0");
-    theater_meshes.kid_hairtwo = asset_server.load("models/person.glb#Mesh9/Primitive0");
-    theater_meshes.kid_face = asset_server.load("models/person.glb#Mesh7/Primitive0");
+    theater_meshes.kid_face = asset_server.load("models/person.glb#Mesh6/Primitive0");
+    theater_meshes.kid_hairone = asset_server.load("models/person.glb#Mesh7/Primitive0");
+    theater_meshes.kid_hairtwo = asset_server.load("models/person.glb#Mesh8/Primitive0");
+    theater_meshes.kid_headhand = asset_server.load("models/person.glb#Mesh9/Primitive0");
+    theater_meshes.kid_legs = asset_server.load("models/person.glb#Mesh10/Primitive0");
+    theater_meshes.kid_torso = asset_server.load("models/person.glb#Mesh11/Primitive0");
+
+    theater_meshes.hairtwo = asset_server.load("models/person.glb#Mesh12/Primitive0");
 
     let texture_handle = asset_server.load("models/theater_outside.png");
     theater_meshes.outside_material = materials.add(StandardMaterial {
@@ -176,6 +177,12 @@ fn load_assets(
 
     let texture_handle = asset_server.load("models/Eyes.png");
     theater_meshes.face_material = materials.add(StandardMaterial {
+        base_color_texture: Some(texture_handle.clone()),
+        ..Default::default()
+    });
+
+    let texture_handle = asset_server.load("models/Mouth.png");
+    theater_meshes.talk_material = materials.add(StandardMaterial {
         base_color_texture: Some(texture_handle.clone()),
         ..Default::default()
     });

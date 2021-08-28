@@ -69,10 +69,7 @@ pub fn ticket_checker(
                                     && transform.translation.z <= r.right_z
                                     && transform.translation.z >= r.left_z {
                                         current_cutscene.trigger(
-                                            vec!(
-                                                cutscene::CutsceneSegment::Textbox("Ahh I don't have a ticket".to_string()),
-                                                cutscene::CutsceneSegment::LevelReset,
-                                            ),
+                                            random_death(&game_state),
                                             game_state.current_level
                                         );
                                         state.push(AppState::Cutscene).unwrap();
@@ -95,6 +92,45 @@ pub fn ticket_checker(
         }
     }
 }
+
+pub fn random_death(
+    game_state: &ResMut<GameState>,
+) -> Vec::<cutscene::CutsceneSegment> {
+
+    let character = match game_state.controlling {
+                        Kid::A => cutscene::Character::A,
+                        Kid::B => cutscene::Character::B,
+                        Kid::C => cutscene::Character::C,
+                        Kid::D => cutscene::Character::D,
+                    };
+    vec!(
+        cutscene::CutsceneSegment::CharacterPosition(character, cutscene::Position::Left),
+        cutscene::CutsceneSegment::SetTalking(character),
+        cutscene::CutsceneSegment::Textbox("Ahh that won't work, I don't have a ticket!".to_string()),
+        cutscene::CutsceneSegment::Textbox("I know, I'll try this...".to_string()),
+        cutscene::CutsceneSegment::LevelReset,
+    )
+}
+
+pub fn random_death_two(
+    game_state: &Res<GameState>,
+) -> Vec::<cutscene::CutsceneSegment> {
+
+    let character = match game_state.controlling {
+                        Kid::A => cutscene::Character::A,
+                        Kid::B => cutscene::Character::B,
+                        Kid::C => cutscene::Character::C,
+                        Kid::D => cutscene::Character::D,
+                    };
+    vec!(
+        cutscene::CutsceneSegment::CharacterPosition(character, cutscene::Position::Left),
+        cutscene::CutsceneSegment::SetTalking(character),
+        cutscene::CutsceneSegment::Textbox("Oh no, they'll catch me!".to_string()),
+        cutscene::CutsceneSegment::Textbox("I know, I'll try this...".to_string()),
+        cutscene::CutsceneSegment::LevelReset,
+    )
+}
+
 
 pub fn fit_in_level(
     level_info: &asset_loader::LevelInfo,

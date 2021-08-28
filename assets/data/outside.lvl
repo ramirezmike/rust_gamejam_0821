@@ -37,51 +37,6 @@ LevelInfo (
                                             rotation_angle: 1.6107514,
                                             speed: 0.8,
                                 ))))),
-                            (Outside,
-                                Rect((RectangleCollision(
-                                    left_z: 9.0,
-                                    right_z: 19.0,
-                                    top_x: 4.0,
-                                    bottom_x: -0.5,
-                                    base_height: 0.0,
-                                    height: 0.0,
-                                ), Some(CameraPosition (
-                                            x: -6.715951,
-                                            y: 6.4616504,
-                                            z: 25.862953,
-                                            rotation_x: -0.23770857,
-                                            rotation_y: -0.9610641,
-                                            rotation_z: -0.14089142,
-                                            rotation_angle: 1.1052444,
-                                            speed: 0.8,
-                                ))))),
-                            (Outside,
-                                Stair(RectangleCollision(
-                                    left_z: 19.0,
-                                    right_z: 22.0,
-                                    top_x: 12.0,
-                                    bottom_x: -0.5,
-                                    base_height: 0.0,
-                                    height: 5.5,
-                                ))),
-                            (Outside,
-                                Rect((RectangleCollision(
-                                    left_z: 22.0,
-                                    right_z: 26.0,
-                                    top_x: 12.0,
-                                    bottom_x: 10.0,
-                                    base_height: 0.0,
-                                    height: 5.5,
-                                ), Some(CameraPosition (
-                                            x: -12.5,
-                                            y: 10.5,
-                                            z: 18.0,
-                                            rotation_x: -0.20287918,
-                                            rotation_y: -0.9580786,
-                                            rotation_z: -0.20229985,
-                                            rotation_angle: 1.6107514,
-                                            speed: 0.8,
-                                ))))),
 
                             // left entrance
                             (Lobby,
@@ -717,13 +672,208 @@ speed: 1.8,
                 level: Outside,
                 has_been_triggered: false,
                 segments: [
-                    CharacterPosition(A, Left),
-                    Textbox("textbox test test wow this is neat"),
-                    Textbox("This is another message in the textbox"),
-                    CharacterPosition(A, Clear),
-                    Textbox("This ok ok in the textbox"),
-                    CharacterPosition(B, Right),
-                    Textbox("This is ok ok message in the textbox"),
+
+                                CameraPosition (
+                                             -12.5,  10.5, 0.0,
+                                            -0.20287918, -0.9580786, -0.20229985,  1.6107514,
+                                             0.8,),
+
+CharacterPosition(B, Right),
+SetTalking(B),
+Textbox("Wow, this place looks terrible"),
+
+CharacterPosition(A, Left),
+SetTalking(A),
+Textbox("What do you mean? it's the best theater in town!"),
+
+SetTalking(B),
+Textbox("...are you sure?"),
+
+CharacterPosition(D, Center_Right),
+SetTalking(D),
+Textbox("Hey!"),
+Textbox("We have to pick a movie."),
+Textbox("There's a romantic comedy at 3:35 called.. 'Carolina Coding'?"),
+Textbox("and... the new 'Ferris the Crab' movie at 3:45"),
+
+SetTalking(B),
+Textbox("Uh, I'm definitely voting for Ferris"),
+
+SetTalking(A),
+Textbox("Yeah! I heard there's const functions!"),
+
+SetTalking(B),
+Textbox("I heard there's subtyping and variance!"),
+
+SetTalking(D),
+Textbox("Ok, let's go!"),
+
+CharacterPosition(C, Center_Left),
+
+SetTalking(C),
+Textbox("s-should we really do this?"),
+
+SetTalking(D),
+Textbox("Yeah, I'll explain more once we get inside"),
+
+                ],
+            ),
+            Cutscene (
+                location: (Vec2(9.0, 0.0), 1.0),
+                level: Outside,
+                has_been_triggered: false,
+                segments: [
+CharacterPosition(A, Right),
+SetTalking(A),
+Textbox("Hold on, why are you all walking like that?"),
+
+CharacterPosition(D, Center_Left),
+CharacterPosition(C, Left),
+SetTalking(C),
+Textbox("What do you mean?"),
+SetTalking(D),
+Textbox("Yeah, we always walk like this."),
+
+                ],
+            ),
+
+            Cutscene (
+                location: (Vec2(0.0, 0.0), 1.0),
+                level: Lobby,
+                has_been_triggered: false,
+                segments: [
+CameraPosition (
+-9.889192, 12.575208, 0.17711745, -0.26182345, -0.92822534, -0.26428473, 1.6560794, 1.0),
+
+CharacterPosition(C, Left),
+SetTalking(C),
+Textbox("Wow, there's a lot of security."),
+Textbox("we should just give up!"),
+
+CharacterPosition(D, Right),
+SetTalking(D),
+Textbox("Don't worry, all we have to do is avoid getting caught"),
+CharacterPosition(D, Clear),
+CharacterPosition(C, Clear),
+Textbox(""),
+
+
+CameraPosition (
+ 3.4658554,
+ 1.540196,
+ -1.7209045,
+ -0.029262483,
+ -0.9975977,
+ -0.06278899,
+ 2.2712, 
+             2.0),
+
+CharacterPosition(D, Right),
+SetTalking(D),
+Textbox(""),
+Textbox("These guys are just checking tickets"),
+Textbox("if you approach from behind..."),
+Textbox("they'll assume you already have a ticket"),
+Textbox("and then you can DISTRACT them while one of us sneaks by"),
+Textbox(""),
+CharacterPosition(D, Clear),
+
+
+CameraPosition (
+5.5390873,
+1.4771425,
+12.969892,
+ -0.057189908,
+ -0.9957918,
+ -0.07161047,
+ 1.7978995,
+             2.0),
+
+CharacterPosition(D, Right),
+Textbox("this guy is especially easy to distract"),
+Textbox(""),
+CharacterPosition(D, Clear),
+
+CameraPosition(11.841707, 3.9477913, -7.4115644, -0.40703917, -0.90062857, -0.15227392, 0.7873852, 2.0),
+
+CharacterPosition(D, Right),
+Textbox("this one is patrolling"),
+Textbox("if he sees you, it's GAME OVER"),
+Textbox(""),
+CharacterPosition(D, Clear),
+
+CameraPosition(12.343016, 5.557175, -9.18402, -0.061169304, -0.9849271, -0.16179273, 2.4286609, 2.0),
+
+SetTalking(D),
+CharacterPosition(D, Left),
+Textbox("this is the concession stand"),
+SetTalking(B),
+CharacterPosition(B, Right),
+Textbox("is that important?"),
+SetTalking(D),
+Textbox("no, that was just in case it wasn't obvious"),
+CharacterPosition(B, Clear),
+CharacterPosition(D, Clear),
+Textbox(""),
+
+CameraPosition(39.536896, 5.916381, 1.2003349, -0.12201316, -0.9849733, -0.12223153, 1.5877243, 2.0),
+
+SetTalking(D),
+CharacterPosition(D, Right),
+Textbox("Once you make it back here you'll need to be careful"),
+Textbox("that's the theater owner"),
+Textbox("she'll know right away what we're doing"),
+Textbox("don't let her see you!"),
+CharacterPosition(D, Clear),
+Textbox(""),
+
+
+CameraPosition(46.480366, 6.1069746, -0.9391755, -0.59795785, -0.79897606, -0.06387787, 0.2658323, 2.0),
+
+SetTalking(D),
+CharacterPosition(D, Right),
+Textbox("Ferris the Crab and the Interior of Mutability is to the left"),
+SetTalking(A),
+CharacterPosition(A, Left),
+Textbox("AHH I'M SO EXCITED"),
+CharacterPosition(D, Clear),
+CharacterPosition(A, Clear),
+Textbox(""),
+
+CameraPosition(54.178326, 7.9326553, -32.767536, -0.20846806, 0.9677693, 0.14129241, 1.2219049, 2.0),
+
+SetTalking(D),
+CharacterPosition(D, Right),
+Textbox("Down this hall and on the right. Left, Left, Right"),
+CharacterPosition(D, Clear),
+Textbox(""),
+
+CameraPosition (
+-9.889192, 12.575208, 0.17711745, -0.26182345, -0.92822534, -0.26428473, 1.6560794, 1.0),
+
+SetTalking(D),
+CharacterPosition(D, Right),
+Textbox("We'll need to split up and help each other"),
+Textbox("Remember: DISTRACT with the primary button"),
+Textbox("Remember: SWITCH with the secondary button"),
+CharacterPosition(A, Left),
+CharacterPosition(B, Center_Left),
+CharacterPosition(C, Center_Right),
+SetTalking(A),
+Textbox("Got it!"),
+SetTalking(B),
+Textbox("Yeah! There was nothing weird about what you just said!"),
+SetTalking(D),
+Textbox("Great! Any questions?"),
+SetTalking(B),
+Textbox("What's on the right side of the theater?"),
+SetTalking(D),
+Textbox("literally nothing"),
+SetTalking(C),
+Textbox("So.. what's the plan?"),
+SetTalking(A),
+Textbox("I know! what if I did this?"),
+
                 ],
             ),
             Cutscene (

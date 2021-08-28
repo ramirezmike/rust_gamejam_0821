@@ -59,6 +59,7 @@ fn update_camera(
     game_state: Res<GameState>,
     level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
     level_info_state: Res<asset_loader::LevelInfoState>, 
+    state: Res<State<crate::AppState>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::P) {
         for (_e, _camera, transform) in cameras.iter_mut() {
@@ -76,12 +77,27 @@ fn update_camera(
             println!("speed: 1.8,"); 
             println!("))))),");
 
+            println!("");
+            println!("CameraPosition({}, {}, {}, {}, {}, {}, {}, 2.0)",
+                translation.x,
+                translation.y,
+                translation.z,
+                rotation.x,
+                rotation.y,
+                rotation.z,
+                axis,);
+
         }
     }
 
     // this is for debugging. If we're flying, don't move the player
     if fly_camera.iter().count() > 0 {
         return;
+    }
+
+    match state.current() {
+        crate::AppState::Cutscene => { return; },
+        _ => ()
     }
 
     let levels_asset = level_info_assets.get(&level_info_state.handle);
@@ -145,13 +161,24 @@ pub fn create_camera(
     }
 
     let mut transform = Transform::default();
-    transform.translation = Vec3::new(-12.5, 10.5, 0.0);
-    transform.rotation = Quat::from_axis_angle(Vec3::new(-0.20287918, -0.9580786, -0.20229985), 1.6107514);
+    transform.translation = Vec3::new(10.054619, 21.765606, -0.21138121);
+    transform.rotation = Quat::from_axis_angle(Vec3::new(-0.15985449, -0.97336835, -0.16431819), 1.6253028);
 
     if let Ok(mut camera_transform) = cameras.single_mut() {
         //*camera_transform = transform;
     } else {
         println!("Creating camera!");
+
+
+        let x = 0.5000002;
+    let y= 1.3000065;
+    let z= 14.500019;
+    let rotation_x= 0.392975;
+    let rotation_y= 0.09769672;
+    let rotation_z= -0.91439885;
+    let rotation_angle= 0.25791532;
+    let mut t = Transform::from_xyz(x, y, z);
+    t.rotate(Quat::from_axis_angle(Vec3::new(rotation_x, rotation_y, rotation_z), rotation_angle));
 
         commands
             .spawn_bundle(PerspectiveCameraBundle {
@@ -164,11 +191,11 @@ pub fn create_camera(
             })
             .with_children(|parent| {
                 parent.spawn_bundle(LightBundle {
-                    transform: Transform::from_xyz(0.0, 8.0, 0.0),
+                    transform: t,
                     light: Light {
                         fov: 180.0,
-                        intensity: 1000.0,
-                        range: 1000.0,
+                        intensity: 1500.0,
+                        range: 10000.0,
                         ..Default::default()
                     },
                     ..Default::default()

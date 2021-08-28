@@ -350,14 +350,24 @@ pub fn handle_distract_event(
                             enemy.is_distracted = true;
                             player.is_distracting = Some(entity);
 
-                            // SWITCH LOGIC
-                            game_state.controlling = 
-                                match game_state.controlling {
-                                    Kid::A => Kid::B,
-                                    Kid::B => Kid::C,
-                                    Kid::C => Kid::D,
-                                    Kid::D => Kid::A,
+                            // SWITCH LOGIC oh my what have I done this is truly terrible
+
+                            let remaining_kids =
+                                game_state.last_positions
+                                          .iter()
+                                          .filter(|(_, position)| !position.is_none())
+                                          .map(|(kid, _)| kid)
+                                          .collect::<Vec::<_>>();
+                            let current = remaining_kids.iter().position(|k| **k == game_state.controlling).unwrap();
+
+                            let next_kid =
+                                if let Some(k) = remaining_kids.get(current + 1) {
+                                    k
+                                } else {
+                                    remaining_kids[0]
                                 };
+                                      
+                            game_state.controlling = *next_kid;
                             player.velocity = Vec3::default();
 
                             follow_text.player_value = "".to_string();
@@ -444,14 +454,23 @@ pub fn player_input(
         }
 
         if keyboard_input.just_pressed(KeyCode::K) || pressed_buttons.contains(&game_controller::GameButton::Switch) {
-            // SWITCH LOGIC
-            game_state.controlling = 
-                match game_state.controlling {
-                    Kid::A => Kid::B,
-                    Kid::B => Kid::C,
-                    Kid::C => Kid::D,
-                    Kid::D => Kid::A,
-                };
+                            // SWITCH LOGIC oh my what have I done this is truly terrible
+                            let remaining_kids =
+                                game_state.last_positions
+                                          .iter()
+                                          .filter(|(_, position)| !position.is_none())
+                                          .map(|(kid, _)| kid)
+                                          .collect::<Vec::<_>>();
+                            let current = remaining_kids.iter().position(|k| **k == game_state.controlling).unwrap();
+
+                            let next_kid =
+                                if let Some(k) = remaining_kids.get(current + 1) {
+                                    k
+                                } else {
+                                    remaining_kids[0]
+                                };
+                                      
+                            game_state.controlling = *next_kid;
             player.velocity = Vec3::default();
 
             follow_text.player_value = "".to_string();

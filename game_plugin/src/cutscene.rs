@@ -83,6 +83,7 @@ impl Plugin for CutscenePlugin {
                SystemSet::on_update(crate::AppState::Cutscene)
                    .with_system(handle_speechbox_event.system())
                    .with_system(handle_character_display_event.system())
+                   .with_system(make_talk.system())
                    //.with_system(debug_move_character.system())
                    .with_system(update_cutscene.system())
 
@@ -91,15 +92,14 @@ impl Plugin for CutscenePlugin {
 }
 
 pub fn update_cutscene(
+    mut game_state: ResMut<GameState>,
     mut current_cutscene: ResMut<CurrentCutscene>,
     mut state: ResMut<State<AppState>>,
-    mut game_state: ResMut<GameState>,
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
     axes: Res<Axis<GamepadAxis>>,
     buttons: Res<Input<GamepadButton>>,
     gamepad: Option<Res<game_controller::GameController>>,
-
     mut speechbox_event_writer: EventWriter<SpeechBoxEvent>, 
     mut character_display_event_writer: EventWriter<CharacterDisplayEvent>, 
     mut level_reset_event_writer: EventWriter<LevelResetEvent>,
@@ -160,11 +160,20 @@ pub fn update_cutscene(
                         current_cutscene.waiting = Some(CutsceneWait::Time(2.0));
                     },
                     CutsceneSegment::Textbox(text) => {
-                        speechbox_event_writer.send(SpeechBoxEvent { text: Some(text.to_string()) });
-                        current_cutscene.waiting = Some(CutsceneWait::Interaction);
+                        if text.len() == 0 {
+                            speechbox_event_writer.send(SpeechBoxEvent { text: None });
+                            current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
+                        } else {
+                            speechbox_event_writer.send(SpeechBoxEvent { text: Some(text.to_string()) });
+                            current_cutscene.waiting = Some(CutsceneWait::Interaction);
+                        }
                     },
                     CutsceneSegment::LevelReset => {
                         level_reset_event_writer.send(LevelResetEvent);
+                        current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
+                    },
+                    CutsceneSegment::SetTalking(character) => {
+                        game_state.currently_talking = Some(*character);
                         current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
                     },
                     CutsceneSegment::CharacterPosition(character, position) => {
@@ -200,25 +209,26 @@ pub fn update_cutscene(
                         game_state.game_is_done = true;
                         current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
                     },
-                    CutsceneSegment::CameraPosition((translation, rotation, speed)) => {
+                    CutsceneSegment::CameraPosition(x,y,z, rx, ry, rz, rw, speed) => {
                         let mut reached_target = false;
                         for mut transform in cameras.iter_mut() {
                             transform.translation.x += 
-                                (translation.x - transform.translation.x) 
+                                (x - transform.translation.x) 
                                * speed
                                * time.delta_seconds();
                             transform.translation.y += 
-                                (translation.y - transform.translation.y) 
+                                (y - transform.translation.y) 
                                * speed
                                * time.delta_seconds();
                             transform.translation.z += 
-                                (translation.z - transform.translation.z) 
+                                (z - transform.translation.z) 
                                * speed
                                * time.delta_seconds();
+                            let rotation = Quat::from_axis_angle(Vec3::new(*rx, *ry, *rz), *rw);
+                            transform.rotation = transform.rotation.slerp(rotation, time.delta_seconds());
 
-                            transform.rotation = transform.rotation.slerp(*rotation, time.delta_seconds());
-
-                            if transform.translation.distance(*translation) < 0.5 {
+                            let translation = Vec3::new(*x, *y, *z);
+                            if transform.translation.distance(translation) < 0.5 {
                                 reached_target = true; 
                             }
                         }
@@ -258,6 +268,22 @@ static RIGHT_ROTATION_X: f32 = 0.0062407814;
 static RIGHT_ROTATION_Y: f32 = 0.9999601;
 static RIGHT_ROTATION_Z: f32 = -0.0065717786;
 static RIGHT_ROTATION_ANGLE: f32 = 3.7862408;
+
+static CENTER_RIGHT_X: f32 = 0.6000001;
+static CENTER_RIGHT_Y: f32 = -0.70000005;
+static CENTER_RIGHT_Z: f32 = -2.9899995;
+static CENTER_RIGHT_ROTATION_X: f32 = 0.015168801;
+static CENTER_RIGHT_ROTATION_Y: f32 = 0.99987656;
+static CENTER_RIGHT_ROTATION_Z: f32 = -0.0043785768;
+static CENTER_RIGHT_ROTATION_ANGLE: f32 = 4.1550827;
+
+static CENTER_LEFT_X: f32 = -0.8;
+static CENTER_LEFT_Y: f32 = -0.70000005;
+static CENTER_LEFT_Z: f32 = -2.9899995;
+static CENTER_LEFT_ROTATION_X: f32 = 0.028549988;
+static CENTER_LEFT_ROTATION_Y: f32 = 0.99955666;
+static CENTER_LEFT_ROTATION_Z: f32 = 0.008944312;
+static CENTER_LEFT_ROTATION_ANGLE: f32 = 5.3240614;
 
 pub fn handle_character_display_event(
     mut character_display_event_reader: EventReader<CharacterDisplayEvent>, 
@@ -300,6 +326,24 @@ pub fn handle_character_display_event(
 
                     commands.entity(camera_entity).push_children(&[character_entity]);
                 },
+                (_, Position::Center_Left) => {
+                    let mut transform = Transform::from_xyz(CENTER_LEFT_X, CENTER_LEFT_Y, CENTER_LEFT_Z);
+                    transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
+                    transform.rotate(Quat::from_axis_angle(Vec3::new(CENTER_LEFT_ROTATION_X, CENTER_LEFT_ROTATION_Y, CENTER_LEFT_ROTATION_Z), CENTER_LEFT_ROTATION_ANGLE));
+                    let character_entity = spawn_character(&mut commands, &game_state, transform, 
+                                                           &theater_meshes, &mut materials, kid, event.character_and_position.0);
+
+                    commands.entity(camera_entity).push_children(&[character_entity]);
+                },
+                (_, Position::Center_Right) => {
+                    let mut transform = Transform::from_xyz(CENTER_RIGHT_X, CENTER_RIGHT_Y, CENTER_RIGHT_Z);
+                    transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
+                    transform.rotate(Quat::from_axis_angle(Vec3::new(CENTER_RIGHT_ROTATION_X, CENTER_RIGHT_ROTATION_Y, CENTER_RIGHT_ROTATION_Z), CENTER_RIGHT_ROTATION_ANGLE));
+                    let character_entity = spawn_character(&mut commands, &game_state, transform, 
+                                                           &theater_meshes, &mut materials, kid, event.character_and_position.0);
+
+                    commands.entity(camera_entity).push_children(&[character_entity]);
+                },
                 (c, Position::Clear) => {
                     for (entity, character) in characters.iter() {
                         if c == character.0 {
@@ -310,6 +354,56 @@ pub fn handle_character_display_event(
                 _ => ()
             }
         }
+    }
+}
+
+pub fn make_talk(
+    game_state: Res<GameState>,
+    mut characters: Query<(&CharacterTracker, &Children)>,
+    mut faces: Query<(Entity, &mut Visible), (With<EyesMaterial>, Without<MouthMaterial>)>,
+    mut mouths: Query<(Entity, &mut Visible), (With<MouthMaterial>, Without<EyesMaterial>)>,
+    mut mouth_open: Local<bool>,
+    mut sleep: Local<f32>,
+    time: Res<Time>,
+) {
+    *sleep -= time.delta_seconds();
+
+    if *sleep <= 0.0 {
+        *sleep = 0.3;
+        *mouth_open = !*mouth_open;
+    }
+
+    for _ in characters.iter_mut() {
+        for (_, mut face) in faces.iter_mut() {
+            face.is_visible = true;
+        }
+        for (_, mut mouth) in mouths.iter_mut() {
+            mouth.is_visible = false;
+        }
+    }
+    match game_state.currently_talking {
+        Some(currently_talking) => {
+            if *mouth_open {
+                for (c, children) in characters.iter_mut() {
+                    if currently_talking == c.0 {
+                        for child_entity in children.iter() {
+                            for (e, mut mouth) in mouths.iter_mut() {
+                                if e == *child_entity {
+                                    mouth.is_visible = true;
+                                }
+                            }
+
+                            for (e, mut face) in faces.iter_mut() {
+                                if e == *child_entity {
+                                    face.is_visible = false;
+                                }
+                            }
+                        }
+                    } 
+                }
+            }
+        },
+        None => ()
     }
 }
 
@@ -504,14 +598,19 @@ pub fn setup_cutscene(
                             parent.spawn_bundle(TextBundle {
                                 style: Style {
                                     margin: Rect::all(Val::Px(5.0)),
+                                    max_size: Size {
+                                        width: Val::Px(1280.0),
+                                        height: Val::Undefined,
+                                    },
                                     ..Default::default()
                                 },
                                 text: Text::with_section(
                                     "",
                                     TextStyle {
                                         font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                                        font_size: 30.0,
+                                        font_size: 50.0,
                                         color: Color::WHITE,
+
                                     },
                                     Default::default(),
                                 ),
@@ -593,10 +692,11 @@ pub struct Cutscene {
 #[derive(Debug, Clone, Deserialize, TypeUuid)]
 #[uuid = "49cbdf56-aa9c-3543-8640-bbbbb74b5052"]
 pub enum CutsceneSegment {
-    CameraPosition((Vec3, Quat, f32)), // position, rotation, speed
+    CameraPosition(f32, f32, f32, f32, f32, f32, f32, f32), // position, rotation, speed
     Textbox(String),
     CharacterPosition(Character, Position),
     LevelSwitch(Level),
+    SetTalking(Character),
     Speech(String, Character),
     Clear(Character),
     LevelReset,
@@ -619,7 +719,8 @@ pub enum Level {
 pub enum Position {
     Left,
     Right,
-    Center,
+    Center_Left,
+    Center_Right,
     Clear,
 }
 
@@ -678,6 +779,7 @@ fn spawn_character(
                               if is_long_hair {
                                   theater_meshes.kid_hairtwo.clone()
                               } else {
+                                  println!("hair one!");
                                   theater_meshes.kid_hairone.clone()
                               }
                           },
@@ -688,8 +790,18 @@ fn spawn_character(
                     mesh: theater_meshes.kid_face.clone(),
                     material: theater_meshes.face_material.clone(),
                     ..Default::default()
-                });
+                })
+                .insert(EyesMaterial);
+
+                parent.spawn_bundle(PbrBundle {
+                    mesh: theater_meshes.kid_face.clone(),
+                    material: theater_meshes.talk_material.clone(),
+                    ..Default::default()
+                })
+                .insert(MouthMaterial);
             }).id()
 }
 
+pub struct EyesMaterial;
+pub struct MouthMaterial;
 pub struct CharacterTracker(Character);

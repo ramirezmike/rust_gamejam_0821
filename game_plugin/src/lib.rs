@@ -65,9 +65,9 @@ pub fn get_colors(
     hair_colors.shuffle(&mut rng);
 
     let mut rng = rand::thread_rng();
-    let mut nums: Vec<i32> = (0..1).collect();
+    let mut nums: Vec<i32> = (0..100).collect();
     nums.shuffle(&mut rng);
-    let is_long_hair = *nums.last().unwrap() == 0;
+    let is_long_hair = *nums.last().unwrap() % 2 == 0;
 
     Colors {
         legs: leg_colors.last().unwrap().to_string(),
@@ -172,6 +172,7 @@ impl Plugin for GamePlugin {
                has_seen_half_of_movie: false,
                has_avoided_movie_guard: false,
                game_is_done: false,
+               currently_talking: None,
            })
            .add_asset::<asset_loader::LevelInfo>()
            .init_asset_loader::<asset_loader::LevelsAssetLoader>()
@@ -192,6 +193,7 @@ pub struct GameState {
     pub has_seen_half_of_movie: bool,
     pub has_avoided_movie_guard: bool,
     pub game_is_done: bool,
+    pub currently_talking: Option::<cutscene::Character>,
 }
 
 #[derive(Clone, PartialEq, Hash, Eq, Debug)]
@@ -354,10 +356,10 @@ pub fn handle_level_reset_event(
 
 pub fn debug_move_entity(
     keyboard_input: Res<Input<KeyCode>>,
-    mut entities: Query<&mut Transform, With<cutscene::DebugCharacterMarker>>,
+    mut entities: Query<&mut Transform, With<Light>>,
     time: Res<Time>,
 ) {
-      return;
+//      return;
     for mut transform in entities.iter_mut() {
         if keyboard_input.pressed(KeyCode::Left) {
             transform.translation.z -= 0.1; 

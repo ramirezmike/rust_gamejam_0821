@@ -339,10 +339,7 @@ pub fn check_for_player(
                         });
 
                         current_cutscene.trigger(
-                            vec!(
-                                cutscene::CutsceneSegment::Textbox("Ahh I was seen".to_string()),
-                                cutscene::CutsceneSegment::LevelReset,
-                            ),
+                            level_collision::random_death_two(&game_state),
                             game_state.current_level
                         );
                         state.push(AppState::Cutscene).unwrap();
