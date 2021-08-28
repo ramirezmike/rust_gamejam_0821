@@ -27,6 +27,7 @@ impl Plugin for TheaterOutsidePlugin {
                     .with_system(crate::camera::create_camera.system().after("loading_level"))
                     .with_system(set_clear_color.system().after("loading_level"))
                     .with_system(follow_text::create_follow_text.system().after("loading_level"))
+
                     .with_system(enemy::spawn_enemies.system().after("loading_level"))
             )
             .add_system_set(
@@ -88,6 +89,111 @@ pub fn check_for_level_exit(
     game_state: Res<GameState>,
     mut state: ResMut<State<AppState>>,
 ) {
+
+    if game_state.has_seen_half_of_movie {
+        current_cutscene.trigger(
+            vec!(
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::A, cutscene::Position::Left),
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::B, cutscene::Position::Center_Left),
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::C, cutscene::Position::Center_Right),
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::D, cutscene::Position::Right),
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::D),
+                cutscene::CutsceneSegment::Textbox("We did it!".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::C),
+                cutscene::CutsceneSegment::Textbox("That part where Ferris wrote a macro from scratch was amazing!".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::A),
+                cutscene::CutsceneSegment::Textbox("Not as amazing as when Ferris used the 'unsafe' keyword!".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::B),
+                cutscene::CutsceneSegment::Textbox("I can't believe that movie was rated PG!".to_string()),
+
+                cutscene::CutsceneSegment::NoTalking,
+                cutscene::CutsceneSegment::Textbox("HEY!".to_string()),
+
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::A, cutscene::Position::Clear),
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::B, cutscene::Position::Clear),
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::C, cutscene::Position::Clear),
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::D, cutscene::Position::Clear),
+
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::Mom, cutscene::Position::Center),
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::Mom),
+                cutscene::CutsceneSegment::Textbox("Just where do you think you're going?".to_string()),
+
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::A, cutscene::Position::Left),
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::A),
+                cutscene::CutsceneSegment::Textbox("Oh no! We've been caught!".to_string()),
+
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::D, cutscene::Position::Right),
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::D),
+                cutscene::CutsceneSegment::Textbox("Umm... sorry everyone".to_string()),
+                cutscene::CutsceneSegment::Textbox("This is...".to_string()),
+                cutscene::CutsceneSegment::Textbox("This is... my mom".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::A),
+                cutscene::CutsceneSegment::Textbox("WHAT!?".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::Mom),
+                cutscene::CutsceneSegment::Textbox("That's right! And you were going to leave without saying good bye?".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::A),
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::B, cutscene::Position::Center_Left),
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::C, cutscene::Position::Center_Right),
+                cutscene::CutsceneSegment::Textbox("I don't understand..  ".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::D),
+                cutscene::CutsceneSegment::Textbox("I guess I should have mentioned that".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::Mom),
+                cutscene::CutsceneSegment::Textbox("You kids cracked us up, pretending to sneak around".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::C),
+                cutscene::CutsceneSegment::Textbox("You saw us!?".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::Mom),
+                cutscene::CutsceneSegment::Textbox("Of course we did!".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::C),
+                cutscene::CutsceneSegment::Textbox("Oh no, we're in trouble now!".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::Mom),
+                cutscene::CutsceneSegment::Textbox("Ha ha, don't you know you four can watch movies for free here?".to_string()),
+                cutscene::CutsceneSegment::Textbox("All of the staff knows".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::A),
+                cutscene::CutsceneSegment::Textbox("Why didn't you tell us??".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::D),
+                cutscene::CutsceneSegment::Textbox("Because you all were so excited to sneak in!".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::A),
+                cutscene::CutsceneSegment::Textbox("Wow, so... this whole thing was just an Illusion of Security!".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::B),
+                cutscene::CutsceneSegment::Textbox("That's the theme of the jam!".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::A),
+                cutscene::CutsceneSegment::Textbox("what?".to_string()),
+
+                cutscene::CutsceneSegment::SetTalking(cutscene::Character::B),
+                cutscene::CutsceneSegment::Textbox("what??".to_string()),
+
+                cutscene::CutsceneSegment::NoTalking,
+
+                cutscene::CutsceneSegment::Textbox("AND THAT'S THE END OF THE GAME".to_string()),
+                cutscene::CutsceneSegment::Textbox("YOU DID IT, THANK YOU FOR PLAYING".to_string()),
+                cutscene::CutsceneSegment::Textbox("THE GAME CRASHES NOW, BYE!".to_string()),
+
+                cutscene::CutsceneSegment::Crash,
+            ),
+            cutscene::Level::Movie
+        );
+        state.push(AppState::Cutscene).unwrap();
+        return;
+    }
+
+
     let levels_asset = level_info_assets.get(&level_info_state.handle);
     if let Some(level_asset) = levels_asset  {
         for (transform, player) in player.iter() {
@@ -124,7 +230,7 @@ pub fn check_for_level_exit(
 }
 
 fn load_assets(
-//    mut commands: Commands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut theater_meshes: ResMut<TheaterMeshes>,
     mut level_info_state: ResMut<asset_loader::LevelInfoState>, 
@@ -211,8 +317,11 @@ fn load_assets(
     loading.asset_handles.push(theater_meshes.kid_hairtwo.clone_untyped());
     loading.asset_handles.push(theater_meshes.kid_face.clone_untyped());
 
+
+
     level_info_state.handle = asset_server.load("data/outside.lvl");
     asset_server.watch_for_changes().unwrap();
+
 }
 
 fn listen_for_level_reset(

@@ -92,6 +92,7 @@ fn move_enemy_into_movie(
 
         current_cutscene.trigger(
             vec!(
+                cutscene::CutsceneSegment::CharacterPosition(cutscene::Character::D, cutscene::Position::Right),
                 cutscene::CutsceneSegment::Textbox("Wow, that was close!".to_string()),
                 cutscene::CutsceneSegment::LevelSwitch(cutscene::Level::Outside),
             ),
@@ -154,7 +155,7 @@ fn load_level(
     }
 
     game_state.current_level = cutscene::Level::Movie;
-    game_state.mode = Mode::Switch;
+    game_state.mode = Mode::Follow;
 
     let color = Color::hex("072AC8").unwrap(); 
     let mut transform = Transform::identity();

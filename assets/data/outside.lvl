@@ -1,6 +1,8 @@
 LevelInfo (
     collision_info: LevelCollisionInfo (
                         shapes: [
+
+
                             (Outside,
                                 LevelSwitch((RectangleCollision(
                                     left_z: -9.0,
@@ -108,18 +110,16 @@ rotation_angle: 1.3353083,
                                     bottom_x: 9.0,
                                     base_height: 0.0,
                                     height: 0.0,
-                                ), None))),
-                             // ), Some(CameraPosition (
-                             //             x: -15.943441,
-                             //             y: 24.057352,
-                             //             z: 24.991856,
-                             //             rotation_x: -0.50865054,
-                             //             rotation_y: -0.82714003,
-                             //             rotation_z: -0.23898572,
-                             //             rotation_angle: 1.0331649,
-                             //             speed: 0.8,
-                             // ))))),
-
+), Some(CameraPosition (
+x: -0.12014054,
+y: 11.142298,
+z: -0.048175164,
+rotation_x: -0.28599638,
+rotation_y: -0.9138243,
+rotation_z: -0.28832495,
+rotation_angle: 1.6688646,
+speed: 1.8,
+))))),
                             // left exit lane
                             (Lobby,
                                 Rect((RectangleCollision(
@@ -216,7 +216,7 @@ speed: 1.8,
                                     left_z: -11.0,
                                     right_z: -3.0,
                                     top_x: 37.5,
-                                    bottom_x: 11.0,
+                                    bottom_x: 18.5,
                                     base_height: 0.0,
                                     height: 0.0,
 ), Some(CameraPosition (
@@ -229,6 +229,25 @@ rotation_z: -0.27432036,
 rotation_angle: 2.4636507,
 speed: 1.8,
 ))))),
+                            // concession left
+                            (Lobby,
+                                Rect((RectangleCollision(
+                                    left_z: -11.0,
+                                    right_z: -3.0,
+                                    top_x: 18.5,
+                                    bottom_x: 11.0,
+                                    base_height: 0.0,
+                                    height: 0.0,
+), Some(CameraPosition (
+x: -0.12014054,
+y: 11.142298,
+z: -0.048175164,
+rotation_x: -0.28599638,
+rotation_y: -0.9138243,
+rotation_z: -0.28832495,
+rotation_angle: 1.6688646,
+speed: 1.8,
+))))),
 
                             // concession right
                             (Lobby,
@@ -236,7 +255,7 @@ speed: 1.8,
                                     left_z: 3.0,
                                     right_z: 11.0,
                                     top_x: 37.5,
-                                    bottom_x: 11.0,
+                                    bottom_x: 18.5,
                                     base_height: 0.0,
                                     height: 0.0,
 ), Some(CameraPosition (
@@ -249,6 +268,25 @@ rotation_z: -0.26505747,
 rotation_angle: 1.0368154,
 speed: 1.8,
 ))))),
+                            (Lobby,
+                                Rect((RectangleCollision(
+                                    left_z: 3.0,
+                                    right_z: 11.0,
+                                    top_x: 18.5,
+                                    bottom_x: 11.0,
+                                    base_height: 0.0,
+                                    height: 0.0,
+), Some(CameraPosition (
+x: -0.12014054,
+y: 11.142298,
+z: -0.048175164,
+rotation_x: -0.28599638,
+rotation_y: -0.9138243,
+rotation_z: -0.28832495,
+rotation_angle: 1.6688646,
+speed: 1.8,
+))))),
+
 
                             // concession center front
                             (Lobby,
@@ -259,17 +297,16 @@ speed: 1.8,
                                     bottom_x: 11.0,
                                     base_height: 0.0,
                                     height: 0.0,
-                                ), None))),
-                             // ), Some(CameraPosition (
-                             //             x: -15.943441,
-                             //             y: 24.057352,
-                             //             z: 24.991856,
-                             //             rotation_x: -0.50865054,
-                             //             rotation_y: -0.82714003,
-                             //             rotation_z: -0.23898572,
-                             //             rotation_angle: 1.0331649,
-                             //             speed: 0.8,
-                             // ))))),
+), Some(CameraPosition (
+x: -0.12014054,
+y: 11.142298,
+z: -0.048175164,
+rotation_x: -0.28599638,
+rotation_y: -0.9138243,
+rotation_z: -0.28832495,
+rotation_angle: 1.6688646,
+speed: 1.8,
+))))),
 
                             // concession center back
                             (Lobby,
@@ -353,6 +390,25 @@ rotation_angle: 2.0210435,
 speed: 1.8,
 ))))),
 
+                            // inside of desk
+                            (Lobby,
+                                Rect((RectangleCollision(
+                                    left_z: -2.0,
+                                    right_z: 2.0,
+                                    top_x: 79.0,
+                                    bottom_x: 60.0,
+                                    base_height: 0.0,
+                                    height: 0.0,
+), Some(CameraPosition (
+x: 48.359116,
+y: 12.576502,
+z: 0.029520836,
+rotation_x: -0.2761482,
+rotation_y: -0.9199705,
+rotation_z: -0.27820244,
+rotation_angle: 1.6614968,
+speed: 1.8,
+))))),
                             // left of desk
                             (Lobby,
                                 Rect((RectangleCollision(
@@ -439,7 +495,7 @@ speed: 1.8,
                                     left_z: -3.5,
                                     right_z: 3.5,
                                     top_x: 79.0,
-                                    bottom_x: 65.0,
+                                    bottom_x: 63.5,
                                     base_height: 0.0,
                                     height: 0.0,
 ), Some(CameraPosition (
@@ -737,154 +793,273 @@ Textbox("Yeah, we always walk like this."),
                 ],
             ),
 
+              Cutscene (
+                  location: (Vec2(0.0, 0.0), 1.0),
+                  level: Lobby,
+                  has_been_triggered: false,
+                  segments: [
+  CameraPosition (
+  -9.889192, 12.575208, 0.17711745, -0.26182345, -0.92822534, -0.26428473, 1.6560794, 1.0),
+
+  CharacterPosition(C, Left),
+  SetTalking(C),
+  Textbox("Wow, there's a lot of security."),
+  Textbox("we should just give up!"),
+
+  CharacterPosition(D, Right),
+  SetTalking(D),
+  Textbox("Don't worry, all we have to do is avoid getting caught"),
+  CharacterPosition(D, Clear),
+  CharacterPosition(C, Clear),
+  Textbox(""),
+
+
+  CameraPosition (
+   3.4658554,
+   1.540196,
+   -1.7209045,
+   -0.029262483,
+   -0.9975977,
+   -0.06278899,
+   2.2712, 
+               2.0),
+
+  CharacterPosition(D, Right),
+  SetTalking(D),
+  Textbox(""),
+  Textbox("These guys are just checking tickets"),
+  Textbox("if you approach from behind..."),
+  Textbox("they'll assume you already have a ticket"),
+  Textbox("and then you can DISTRACT them while one of us sneaks by"),
+  Textbox(""),
+  CharacterPosition(D, Clear),
+
+
+  CameraPosition (
+  5.5390873,
+  1.4771425,
+  12.969892,
+   -0.057189908,
+   -0.9957918,
+   -0.07161047,
+   1.7978995,
+               2.0),
+
+  CharacterPosition(D, Right),
+  Textbox("this guy is especially easy to distract"),
+  Textbox(""),
+  CharacterPosition(D, Clear),
+
+  CameraPosition(11.841707, 3.9477913, -7.4115644, -0.40703917, -0.90062857, -0.15227392, 0.7873852, 2.0),
+
+  CharacterPosition(D, Right),
+  Textbox("this one is patrolling"),
+  Textbox("if he sees you, it's GAME OVER"),
+  Textbox(""),
+  CharacterPosition(D, Clear),
+
+  CameraPosition(12.343016, 5.557175, -9.18402, -0.061169304, -0.9849271, -0.16179273, 2.4286609, 2.0),
+
+  SetTalking(D),
+  CharacterPosition(D, Left),
+  Textbox("this is the concession stand"),
+  SetTalking(B),
+  CharacterPosition(B, Right),
+  Textbox("is that important?"),
+  SetTalking(D),
+  Textbox("no, that was just in case it wasn't obvious"),
+  CharacterPosition(B, Clear),
+  CharacterPosition(D, Clear),
+  Textbox(""),
+
+  CameraPosition(39.536896, 5.916381, 1.2003349, -0.12201316, -0.9849733, -0.12223153, 1.5877243, 2.0),
+
+  SetTalking(D),
+  CharacterPosition(D, Right),
+  Textbox("Once you make it back here you'll need to be careful"),
+  Textbox("that's the theater owner"),
+  Textbox("she'll know right away what we're doing"),
+  Textbox("don't let her see you!"),
+  CharacterPosition(D, Clear),
+  Textbox(""),
+
+
+  CameraPosition(46.480366, 6.1069746, -0.9391755, -0.59795785, -0.79897606, -0.06387787, 0.2658323, 2.0),
+
+  SetTalking(D),
+  CharacterPosition(D, Right),
+  Textbox("Ferris the Crab and the Interior of Mutability is to the left"),
+  SetTalking(A),
+  CharacterPosition(A, Left),
+  Textbox("AHH I'M SO EXCITED"),
+  CharacterPosition(D, Clear),
+  CharacterPosition(A, Clear),
+  Textbox(""),
+
+  CameraPosition(54.178326, 7.9326553, -32.767536, -0.20846806, 0.9677693, 0.14129241, 1.2219049, 2.0),
+
+  SetTalking(D),
+  CharacterPosition(D, Right),
+  Textbox("Down this hall and on the right. Left, Left, Right"),
+  Textbox("And then into the theater room."),
+  CharacterPosition(B, Left),
+
+  SetTalking(B),
+  Textbox("Theater room?"),
+
+  SetTalking(D),
+  Textbox("Yeah, the room where they show the movie."),
+
+  SetTalking(B),
+  Textbox("Oh, the picture room"),
+
+  CharacterPosition(C, Center_Right),
+  SetTalking(C),
+  Textbox("No, the viewing room"),
+
+  SetTalking(B),
+  Textbox("I don't think that's right..."),
+
+  SetTalking(D),
+  Textbox("It doesn't matter! This is where we need to go."),
+
+  CharacterPosition(D, Clear),
+  CharacterPosition(C, Clear),
+  CharacterPosition(B, Clear),
+  Textbox(""),
+
+  CameraPosition (
+  -9.889192, 12.575208, 0.17711745, -0.26182345, -0.92822534, -0.26428473, 1.6560794, 1.0),
+
+  SetTalking(D),
+  CharacterPosition(D, Right),
+  Textbox("We'll need to split up and help each other"),
+  Textbox("Remember: DISTRACT with the primary button"),
+  Textbox("Remember: SWITCH with the secondary button"),
+  CharacterPosition(A, Left),
+  CharacterPosition(B, Center_Left),
+  CharacterPosition(C, Center_Right),
+  SetTalking(A),
+  Textbox("Got it!"),
+  SetTalking(B),
+  Textbox("Yeah! There was nothing weird about what you just said!"),
+  SetTalking(D),
+  Textbox("Great! Any questions?"),
+  SetTalking(B),
+  Textbox("What's on the right side of the theater?"),
+  SetTalking(D),
+  Textbox("literally nothing"),
+  SetTalking(C),
+  Textbox("So.. what's the plan?"),
+  SetTalking(A),
+  Textbox("I know! what if I did this?"),
+
+                  ],
+              ),
+
             Cutscene (
                 location: (Vec2(0.0, 0.0), 1.0),
-                level: Lobby,
-                has_been_triggered: false,
-                segments: [
-CameraPosition (
--9.889192, 12.575208, 0.17711745, -0.26182345, -0.92822534, -0.26428473, 1.6560794, 1.0),
-
-CharacterPosition(C, Left),
-SetTalking(C),
-Textbox("Wow, there's a lot of security."),
-Textbox("we should just give up!"),
-
-CharacterPosition(D, Right),
-SetTalking(D),
-Textbox("Don't worry, all we have to do is avoid getting caught"),
-CharacterPosition(D, Clear),
-CharacterPosition(C, Clear),
-Textbox(""),
-
-
-CameraPosition (
- 3.4658554,
- 1.540196,
- -1.7209045,
- -0.029262483,
- -0.9975977,
- -0.06278899,
- 2.2712, 
-             2.0),
-
-CharacterPosition(D, Right),
-SetTalking(D),
-Textbox(""),
-Textbox("These guys are just checking tickets"),
-Textbox("if you approach from behind..."),
-Textbox("they'll assume you already have a ticket"),
-Textbox("and then you can DISTRACT them while one of us sneaks by"),
-Textbox(""),
-CharacterPosition(D, Clear),
-
-
-CameraPosition (
-5.5390873,
-1.4771425,
-12.969892,
- -0.057189908,
- -0.9957918,
- -0.07161047,
- 1.7978995,
-             2.0),
-
-CharacterPosition(D, Right),
-Textbox("this guy is especially easy to distract"),
-Textbox(""),
-CharacterPosition(D, Clear),
-
-CameraPosition(11.841707, 3.9477913, -7.4115644, -0.40703917, -0.90062857, -0.15227392, 0.7873852, 2.0),
-
-CharacterPosition(D, Right),
-Textbox("this one is patrolling"),
-Textbox("if he sees you, it's GAME OVER"),
-Textbox(""),
-CharacterPosition(D, Clear),
-
-CameraPosition(12.343016, 5.557175, -9.18402, -0.061169304, -0.9849271, -0.16179273, 2.4286609, 2.0),
-
-SetTalking(D),
-CharacterPosition(D, Left),
-Textbox("this is the concession stand"),
-SetTalking(B),
-CharacterPosition(B, Right),
-Textbox("is that important?"),
-SetTalking(D),
-Textbox("no, that was just in case it wasn't obvious"),
-CharacterPosition(B, Clear),
-CharacterPosition(D, Clear),
-Textbox(""),
-
-CameraPosition(39.536896, 5.916381, 1.2003349, -0.12201316, -0.9849733, -0.12223153, 1.5877243, 2.0),
-
-SetTalking(D),
-CharacterPosition(D, Right),
-Textbox("Once you make it back here you'll need to be careful"),
-Textbox("that's the theater owner"),
-Textbox("she'll know right away what we're doing"),
-Textbox("don't let her see you!"),
-CharacterPosition(D, Clear),
-Textbox(""),
-
-
-CameraPosition(46.480366, 6.1069746, -0.9391755, -0.59795785, -0.79897606, -0.06387787, 0.2658323, 2.0),
-
-SetTalking(D),
-CharacterPosition(D, Right),
-Textbox("Ferris the Crab and the Interior of Mutability is to the left"),
-SetTalking(A),
-CharacterPosition(A, Left),
-Textbox("AHH I'M SO EXCITED"),
-CharacterPosition(D, Clear),
-CharacterPosition(A, Clear),
-Textbox(""),
-
-CameraPosition(54.178326, 7.9326553, -32.767536, -0.20846806, 0.9677693, 0.14129241, 1.2219049, 2.0),
-
-SetTalking(D),
-CharacterPosition(D, Right),
-Textbox("Down this hall and on the right. Left, Left, Right"),
-CharacterPosition(D, Clear),
-Textbox(""),
-
-CameraPosition (
--9.889192, 12.575208, 0.17711745, -0.26182345, -0.92822534, -0.26428473, 1.6560794, 1.0),
-
-SetTalking(D),
-CharacterPosition(D, Right),
-Textbox("We'll need to split up and help each other"),
-Textbox("Remember: DISTRACT with the primary button"),
-Textbox("Remember: SWITCH with the secondary button"),
-CharacterPosition(A, Left),
-CharacterPosition(B, Center_Left),
-CharacterPosition(C, Center_Right),
-SetTalking(A),
-Textbox("Got it!"),
-SetTalking(B),
-Textbox("Yeah! There was nothing weird about what you just said!"),
-SetTalking(D),
-Textbox("Great! Any questions?"),
-SetTalking(B),
-Textbox("What's on the right side of the theater?"),
-SetTalking(D),
-Textbox("literally nothing"),
-SetTalking(C),
-Textbox("So.. what's the plan?"),
-SetTalking(A),
-Textbox("I know! what if I did this?"),
-
-                ],
-            ),
-            Cutscene (
-                location: (Vec2(20.0, 0.0), 1.0),
                 level: Movie,
                 has_been_triggered: false,
                 segments: [
-                    CharacterPosition(Dude, Left),
-                    Textbox("textbox test test wow this is neat"),
-                    Textbox("This is another message in the textbox"),
-                    SetHalfwayMovie, 
+CameraPosition(-12.984348, 2.5596716, -0.42800546, 0.06885445, -0.99519986, 0.069544405, 1.5855781, 2.0),
+Delay(0.5),
+CameraPosition(-12.984348, 2.5596716, -0.42800546, 0.06885445, -0.99519986, 0.069544405, 1.5855781, 2.0),
+Delay(0.5),
+CharacterPosition(A, Right),
+SetTalking(A),
+Textbox("We made it!"),
+
+CharacterPosition(B, Left),
+SetTalking(B),
+Textbox("Wait.. where are all the seats?"),
+
+CharacterPosition(D, Center_Right),
+SetTalking(D),
+Textbox("Oh yeah.. the theater is uhh.. currently remodeling?"),
+Textbox("so it's standing-room only"),
+
+CharacterPosition(C, Center_Left),
+SetTalking(C),
+Textbox("Where should we sit?"),
+
+SetTalking(A),
+Textbox("Duh, in the back where the cool kids sit and have trouble seeing the movie"),
+                ],
+            ),
+            Cutscene (
+                location: (Vec2(20.0, 0.0), 2.0),
+                level: Movie,
+                has_been_triggered: false,
+                segments: [
+CharacterPosition(A, Right),
+SetTalking(A),
+Textbox("ok yeah that works"),
+
+CharacterPosition(C, Left),
+SetTalking(C),
+Textbox("I can't believe we actually made it"),
+
+CharacterPosition(B, Center_Right),
+CharacterPosition(D, Center_Left),
+SetTalking(D),
+Textbox("Shh, we're missing the trailers!"),
+Textbox("I think this one is for that other movie that's playing"),
+
+NoTalking,
+Textbox("'He's a software engineer making six figures in the city.'"),
+Textbox("'She's living in the south, breaking the DRM of local farm equipment.'"),
+Textbox("'And now, he's faced with the biggest decision of his life!'"),
+Textbox("'He'll have to choose between saving the company or saving the farms.'"),
+
+SetTalking(B),
+Textbox("Oh wow, this is pretty terrible"),
+SetTalking(D),
+Textbox("I don't know, maybe it could be good?"),
+
+NoTalking,
+Textbox("'He flies out to South Carolina where he learns all about tractor maintenance, low-level systems programming and whole-hog barbecue.'"),
+
+SetTalking(D),
+Textbox("no, this is definitely terrible"),
+
+NoTalking,
+Textbox("'Will the farms be saved?'"),
+Textbox("'Will they avoid the legal ramifications of revealing company secrets and publishing reverse engineered API documentation?'"),
+Textbox("'Will the two finally see eye-to-eye on open software and coleslaw?'"),
+Textbox("'Find out in... Carolina Coding!'"),
+
+SetTalking(A),
+Textbox("I'd watch it"),
+
+NoTalking,
+Textbox("'And now.. our Feature Presentation'"),
+
+SetTalking(D),
+Textbox("Shh, shh, it's starting it's starting!"),
+Textbox(""),
+CharacterPosition(A, Clear),
+CharacterPosition(B, Clear),
+CharacterPosition(C, Clear),
+CharacterPosition(D, Clear),
+
+CameraPosition(-13.359132, 2.0185418, 0.2344452, -0.39464942, -0.82741237, -0.39955062, 1.7712352, 2.0),
+
+SetHalfwayMovie, 
+Delay(2.0),
+CameraPosition(-12.984348, 2.5596716, -0.42800546, 0.06885445, -0.99519986, 0.069544405, 1.5855781, 2.0),
+
+CharacterPosition(D, Right),
+SetTalking(D),
+Textbox("Oh no, they're checking the theater room"),
+
+CharacterPosition(B, Center_Left),
+SetTalking(B),
+Textbox("Viewing Room"),
+
+SetTalking(D),
+Textbox("Shut up and hide!"),
+
                 ],
             ),
         ]
@@ -902,6 +1077,29 @@ Textbox("I know! what if I did this?"),
             enemy_type: Patrol([
                             (13.0, -14.5),
                             (45.0, -14.5),
+                        ]),
+            facing: Down,
+        ),
+        EnemySpawnPoint(
+            level: Lobby,
+            location: (50.0, -37.7),
+            enemy_type: Patrol([
+                            (50.0, -37.7),
+                            (50.0, -61.5),
+                        ]),
+            facing: Down,
+        ),
+        EnemySpawnPoint(
+            level: Lobby,
+            location: (61.0, 0.0),
+            enemy_type: Mom([
+                            (61.0, 0.0),
+                            (70.0, 0.0),
+                            (70.0, 12.0),
+                            (55.0, 12.0),
+                            (55.0, -12.0),
+                            (70.0, -12.0),
+                            (70.0, 0.0),
                         ]),
             facing: Down,
         ),

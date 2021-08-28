@@ -1,7 +1,9 @@
 use bevy::prelude::*;
+use bevy::app::AppExit;
+use bevy::app::Events;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
-use crate::{player,asset_loader,AppState, game_controller, camera, ChangeStateEvent, GameState, LevelResetEvent, Kid, theater_outside};
+use crate::{player,asset_loader,AppState, game_controller, camera, ChangeStateEvent, GameState, LevelResetEvent, Kid, theater_outside, Mode};
 
 pub struct CutsceneEvent {
 }
@@ -95,7 +97,7 @@ pub fn update_cutscene(
     mut game_state: ResMut<GameState>,
     mut current_cutscene: ResMut<CurrentCutscene>,
     mut state: ResMut<State<AppState>>,
-    time: Res<Time>,
+    mut exit: (ResMut<Events<AppExit>>, Res<Time>),
     keyboard_input: Res<Input<KeyCode>>,
     axes: Res<Axis<GamepadAxis>>,
     buttons: Res<Input<GamepadButton>>,
@@ -107,6 +109,8 @@ pub fn update_cutscene(
     mut cameras: Query<&mut Transform, With<camera::MainCamera>>,
     mut action_buffer: Local<Option::<u128>>,
 ) {
+    let time = exit.1;
+    let mut exit = exit.0;
     let time_buffer = 100;
     let time_since_startup = time.time_since_startup().as_millis();
     if let Some(time_since_action) = *action_buffer {
@@ -159,6 +163,9 @@ pub fn update_cutscene(
                         println!("{}", text);
                         current_cutscene.waiting = Some(CutsceneWait::Time(2.0));
                     },
+                    CutsceneSegment::Crash => {
+                        exit.send(AppExit);
+                    },
                     CutsceneSegment::Textbox(text) => {
                         if text.len() == 0 {
                             speechbox_event_writer.send(SpeechBoxEvent { text: None });
@@ -172,8 +179,15 @@ pub fn update_cutscene(
                         level_reset_event_writer.send(LevelResetEvent);
                         current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
                     },
+                    CutsceneSegment::Delay(delay) => {
+                        current_cutscene.waiting = Some(CutsceneWait::Time(*delay));
+                    },
                     CutsceneSegment::SetTalking(character) => {
                         game_state.currently_talking = Some(*character);
+                        current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
+                    },
+                    CutsceneSegment::NoTalking => {
+                        game_state.currently_talking = None;
                         current_cutscene.waiting = Some(CutsceneWait::Time(0.0));
                     },
                     CutsceneSegment::CharacterPosition(character, position) => {
@@ -197,6 +211,7 @@ pub fn update_cutscene(
                     },
                     CutsceneSegment::SetHalfwayMovie => {
                         game_state.has_seen_half_of_movie = true;
+                        game_state.mode = Mode::Switch;
                         game_state.last_positions.insert(Kid::A, Some(Vec3::new(21.0, 16.0, 0.0)));
                         game_state.last_positions.insert(Kid::B, Some(Vec3::new(21.0, 16.0, -1.0)));
                         game_state.last_positions.insert(Kid::C, Some(Vec3::new(21.0, 16.0, -0.5)));
@@ -227,8 +242,10 @@ pub fn update_cutscene(
                             let rotation = Quat::from_axis_angle(Vec3::new(*rx, *ry, *rz), *rw);
                             transform.rotation = transform.rotation.slerp(rotation, time.delta_seconds());
 
+
+                            
                             let translation = Vec3::new(*x, *y, *z);
-                            if transform.translation.distance(translation) < 0.5 {
+                            if transform.translation.distance(translation) < 0.5 && rotation.angle_between(transform.rotation) < 0.05 {
                                 reached_target = true; 
                             }
                         }
@@ -251,6 +268,14 @@ pub fn update_cutscene(
         }
     }
 }
+
+static CENTER_X: f32 = -0.19999993;
+static CENTER_Y: f32 = -0.9;
+static CENTER_Z: f32 = -2.59;
+static CENTER_ROTATION_X: f32 = -0.106466345;
+static CENTER_ROTATION_Y: f32 = 0.9847425;
+static CENTER_ROTATION_Z: f32 = 0.13765208;
+static CENTER_ROTATION_ANGLE: f32 = 4.749831;
 
 static SCALE: f32 = 0.35;
 static LEFT_X: f32 = -1.1;
@@ -298,6 +323,29 @@ pub fn handle_character_display_event(
     for camera_entity in main_camera.iter() {
         for event in character_display_event_reader.iter() {
             println!("Received display character event");
+
+            match &event.character_and_position {
+                (Character::Mom, Position::Clear) => {
+                    for (entity, character) in characters.iter() {
+                        if character.0 == Character::Mom {
+                            commands.entity(entity).despawn_recursive();
+                        }
+                    }
+
+                    continue;
+                },
+                (Character::Mom, _) => {
+                    let mut transform = Transform::from_xyz(CENTER_X, CENTER_Y, CENTER_Z);
+                    transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
+                    transform.rotate(Quat::from_axis_angle(Vec3::new(CENTER_ROTATION_X, CENTER_ROTATION_Y, CENTER_ROTATION_Z), CENTER_ROTATION_ANGLE));
+                    let character_entity = spawn_mom(&mut commands, &game_state, transform, &theater_meshes, &mut materials, );
+
+                    commands.entity(camera_entity).push_children(&[character_entity]);
+                    continue;
+                 },
+                 _ => ()
+            }
+
             let color = Color::hex("FCF300").unwrap(); 
             let kid = match &event.character_and_position.0 {
                          Character::Dude => Kid::A,
@@ -305,6 +353,7 @@ pub fn handle_character_display_event(
                          Character::B => Kid::B,
                          Character::C => Kid::C,
                          Character::D => Kid::D,
+                         _ => Kid::A,
                       };
 
             match event.character_and_position {
@@ -694,9 +743,11 @@ pub struct Cutscene {
 pub enum CutsceneSegment {
     CameraPosition(f32, f32, f32, f32, f32, f32, f32, f32), // position, rotation, speed
     Textbox(String),
+    Crash,
     CharacterPosition(Character, Position),
     LevelSwitch(Level),
     SetTalking(Character),
+    NoTalking,
     Speech(String, Character),
     Clear(Character),
     LevelReset,
@@ -721,6 +772,7 @@ pub enum Position {
     Right,
     Center_Left,
     Center_Right,
+    Center,
     Clear,
 }
 
@@ -732,6 +784,65 @@ pub enum Character {
     B,
     C,
     D,
+    Mom,
+}
+
+fn spawn_mom(
+    commands: &mut Commands, 
+    game_state: &Res<GameState>,
+    transform: Transform,
+    theater_meshes: &ResMut<theater_outside::TheaterMeshes>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+) -> Entity {
+
+    let leg_color = Color::hex("293241").unwrap(); 
+    let torso_color = Color::hex("e63946").unwrap(); 
+    let hat_color = Color::hex("e63946").unwrap();
+    let mom_skin = Color::hex(game_state.kid_colors[&Kid::D].skin.clone()).unwrap();
+    let hair_color = Color::hex(game_state.kid_colors[&Kid::D].hair.clone()).unwrap();
+
+            commands.spawn_bundle(PbrBundle {
+                        transform,
+                        ..Default::default()
+                    })
+                    .insert(CharacterTracker(Character::Mom))
+                    .insert(CutsceneTrashMarker)
+                    .insert(DebugCharacterMarker)
+                    .with_children(|parent|  {
+                        parent.spawn_bundle(PbrBundle {
+                            mesh: theater_meshes.legs.clone(),
+                            material: materials.add(leg_color.into()),
+                            ..Default::default()
+                        });
+                        parent.spawn_bundle(PbrBundle {
+                            mesh: theater_meshes.torso.clone(),
+                            material: materials.add(torso_color.into()),
+                            ..Default::default()
+                        });
+                        parent.spawn_bundle(PbrBundle {
+                            mesh: theater_meshes.headhand.clone(),
+                            material: materials.add(mom_skin.into()),
+                            ..Default::default()
+                        });
+                        parent.spawn_bundle(PbrBundle {
+                            mesh: theater_meshes.hairtwo.clone(),
+                            material: materials.add(hair_color.into()),
+                            ..Default::default()
+                        });
+                        parent.spawn_bundle(PbrBundle {
+                            mesh: theater_meshes.face.clone(),
+                            material: theater_meshes.face_material.clone(),
+                            ..Default::default()
+                        })
+                        .insert(EyesMaterial);
+
+                        parent.spawn_bundle(PbrBundle {
+                            mesh: theater_meshes.face.clone(),
+                            material: theater_meshes.talk_material.clone(),
+                            ..Default::default()
+                        })
+                        .insert(MouthMaterial);
+                    }).id()
 }
 
 fn spawn_character(

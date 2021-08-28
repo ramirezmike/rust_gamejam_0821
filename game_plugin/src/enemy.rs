@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{player, asset_loader, theater_outside, GameState, level_collision, cutscene, AppState, follow_text::FollowTextEvent, get_colors};
+use crate::{player, asset_loader, theater_outside, GameState, level_collision, cutscene, AppState, follow_text::FollowTextEvent, get_colors, Kid};
 use bevy::render::pipeline::PrimitiveTopology;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
@@ -28,7 +28,7 @@ pub struct EnemySpawnPoint {
 pub enum EnemyType {
     Ticket(bool),
     Patrol(Vec::<Vec2>),
-    Mom,
+    Mom(Vec::<Vec2>),
     Camera,
     Dog
 }
@@ -103,6 +103,8 @@ pub fn spawn_enemies(
             if enemy_spawn.level != game_state.current_level { continue; }
 
             let skin_color = Color::hex(other_colors.skin.to_string()).unwrap();
+            let mom_skin = Color::hex(game_state.kid_colors[&Kid::D].skin.clone()).unwrap();
+            let hair_color = Color::hex(game_state.kid_colors[&Kid::D].hair.clone()).unwrap();
 
             let mut transform = Transform::from_translation(Vec3::new(enemy_spawn.location.x as f32, 
                                                                       0.0 as f32, 
@@ -136,14 +138,28 @@ pub fn spawn_enemies(
                         });
                         parent.spawn_bundle(PbrBundle {
                             mesh: theater_meshes.headhand.clone(),
-                            material: materials.add(skin_color.into()),
+                            material: match enemy_spawn.enemy_type {
+                                        EnemyType::Mom(_) => materials.add(mom_skin.into()),
+                                        _ => materials.add(skin_color.into()),
+                                      },
                             ..Default::default()
                         });
-                        parent.spawn_bundle(PbrBundle {
-                            mesh: theater_meshes.hat.clone(),
-                            material: materials.add(hat_color.into()),
-                            ..Default::default()
-                        });
+                        match enemy_spawn.enemy_type {
+                            EnemyType::Mom(_) => {
+                                parent.spawn_bundle(PbrBundle {
+                                    mesh: theater_meshes.hairtwo.clone(),
+                                    material: materials.add(hair_color.into()),
+                                    ..Default::default()
+                                });
+                            }, 
+                            _ => {
+                                parent.spawn_bundle(PbrBundle {
+                                    mesh: theater_meshes.hat.clone(),
+                                    material: materials.add(hat_color.into()),
+                                    ..Default::default()
+                                });
+                            }
+                        }
                         parent.spawn_bundle(PbrBundle {
                             mesh: theater_meshes.face.clone(),
                             material: theater_meshes.face_material.clone(),
@@ -151,7 +167,7 @@ pub fn spawn_enemies(
                         });
 
                         match enemy_spawn.enemy_type {
-                            EnemyType::Patrol(_) => {
+                            EnemyType::Mom(_) | EnemyType::Patrol(_) => {
                                 let color = Color::rgba(vision_color.r(), vision_color.g(), vision_color.b(), 0.7);
 
                                 parent.spawn_bundle(PbrBundle {
@@ -187,7 +203,7 @@ pub fn update_enemy(
 ) {
     for (entity, mut transform, mut enemy) in enemies.iter_mut() {
         match &enemy.enemy_spawn.enemy_type {
-            EnemyType::Patrol(waypoints) => {
+             EnemyType::Mom(waypoints) | EnemyType::Patrol(waypoints) => {
                 // this is pretty bad but it lets me end the game easier
                 if enemy.target_waypoint >= waypoints.len() - 1
                 && game_state.current_level == cutscene::Level::Movie
@@ -304,7 +320,9 @@ pub fn check_for_player(
 ) {
     for (entity, enemy, transform, children) in enemies.iter() {
         match enemy.enemy_spawn.enemy_type {
-            EnemyType::Patrol(_) => {
+            EnemyType::Patrol(_) | EnemyType::Mom(_) => {
+
+     
                 let (axis, mut angle) = transform.rotation.to_axis_angle();
                 if axis.y >= -0.0 {
                     angle = -angle;

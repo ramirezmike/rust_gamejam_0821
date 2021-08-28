@@ -81,7 +81,6 @@ pub fn get_colors(
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut AppBuilder) {
 
-
         app.add_plugins(DefaultPlugins)
 //         .add_plugin(DebugLinesPlugin)
            .init_resource::<menu::ButtonMaterials>()
@@ -356,10 +355,10 @@ pub fn handle_level_reset_event(
 
 pub fn debug_move_entity(
     keyboard_input: Res<Input<KeyCode>>,
-    mut entities: Query<&mut Transform, With<Light>>,
+    mut entities: Query<&mut Transform, With<cutscene::DebugCharacterMarker>>,
     time: Res<Time>,
 ) {
-//      return;
+    return;
     for mut transform in entities.iter_mut() {
         if keyboard_input.pressed(KeyCode::Left) {
             transform.translation.z -= 0.1; 

@@ -25,7 +25,7 @@ impl AssetLoader for LevelsAssetLoader {
     }
 
     fn extensions(&self) -> &[&str] {
-        &["lvl"]
+        &["lvl", ]
     }
 }
 
