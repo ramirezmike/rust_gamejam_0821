@@ -1,10 +1,14 @@
 use bevy::prelude::*;
 use rand::seq::SliceRandom;
 
-use crate::{Direction, game_controller, game_settings, asset_loader, level_collision, GameState, theater_outside, Kid, Mode};
+use crate::{Direction, game_controller, game_settings, asset_loader, level_collision, 
+            GameState, theater_outside, Kid, Mode, follow_text, enemy} ;
 
+static DISTRACT_TEXT: &str = "[DISTRACT]";
+static DISTRACT_DISTANCE: f32 = 2.0;
 pub struct Player {
     pub kid: Kid,
+    pub is_distracting: Option::<Entity>,
     pub movement: Option::<Direction>,
     pub velocity: Vec3,
 }
@@ -36,8 +40,6 @@ pub fn spawn_player(
     game_state: &ResMut<GameState>,
 
 ) {
-    let color = Color::hex("FCF300").unwrap(); 
-
     let kids = vec!(Kid::A, Kid::B, Kid::C, Kid::D);
 
     for (i, kid) in kids.iter().enumerate() {
@@ -45,6 +47,12 @@ pub fn spawn_player(
         let mut transform = Transform::from_translation(position);
         transform.apply_non_uniform_scale(Vec3::new(SCALE, SCALE, SCALE)); 
         transform.rotate(Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), std::f32::consts::PI));
+
+        let leg_color = Color::hex(game_state.kid_colors[&kid].legs.clone()).unwrap();
+        let torso_color = Color::hex(game_state.kid_colors[&kid].torso.clone()).unwrap();
+        let skin_color = Color::hex(game_state.kid_colors[&kid].skin.clone()).unwrap();
+        let hair_color = Color::hex(game_state.kid_colors[&kid].hair.clone()).unwrap();
+
         let player_entity = 
         commands.spawn_bundle(PbrBundle {
                     transform,
@@ -53,22 +61,23 @@ pub fn spawn_player(
                 .insert(Player {
                     kid: *kid,
                     movement: None,
+                    is_distracting: None,
                     velocity: Vec3::default()
                 })
                 .with_children(|parent|  {
                     parent.spawn_bundle(PbrBundle {
                         mesh: theater_meshes.kid_legs.clone(),
-                        material: materials.add(color.into()),
+                        material: materials.add(leg_color.into()),
                         ..Default::default()
                     });
                     parent.spawn_bundle(PbrBundle {
                         mesh: theater_meshes.kid_torso.clone(),
-                        material: materials.add(color.into()),
+                        material: materials.add(torso_color.into()),
                         ..Default::default()
                     });
                     parent.spawn_bundle(PbrBundle {
                         mesh: theater_meshes.kid_headhand.clone(),
-                        material: materials.add(color.into()),
+                        material: materials.add(skin_color.into()),
                         ..Default::default()
                     });
                     parent.spawn_bundle(PbrBundle {
@@ -85,7 +94,7 @@ pub fn spawn_player(
                                       theater_meshes.kid_hairtwo.clone()
                                   }
                               },
-                        material: materials.add(color.into()),
+                        material: materials.add(hair_color.into()),
                         ..Default::default()
                     });
                     parent.spawn_bundle(PbrBundle {
@@ -101,7 +110,7 @@ pub fn player_movement_update(
     mut player: Query<(&mut Player, &mut Transform)>,
     settings: Res<game_settings::GameSettings>,
     time: Res<Time>,
-    game_state: Res<GameState>,
+    game_state: ResMut<GameState>,
     level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
     level_info_state: Res<asset_loader::LevelInfoState>, 
 ) {
@@ -144,7 +153,7 @@ pub fn move_non_player_controlled_kid(
     mut transform: &mut Transform, 
     controlling_kid_position: &Vec3,
     move_away_from: &Vec::<(Kid, Vec3)>,
-    game_state: &Res<GameState>,
+    game_state: &ResMut<GameState>,
     settings: &Res<game_settings::GameSettings>,
     level_info_assets: &Res<Assets<asset_loader::LevelInfo>>,
     level_info_state: &Res<asset_loader::LevelInfoState>, 
@@ -167,14 +176,13 @@ pub fn move_non_player_controlled_kid(
         }
     }
 
-
-    player.velocity.clamp_length_max(settings.player_speed * 0.01);
+    player.velocity = player.velocity.clamp_length_max(settings.player_speed * 0.1);
     let new_translation = transform.translation + player.velocity;
 
     let levels_asset = level_info_assets.get(&level_info_state.handle);
     if let Some(level_asset) = levels_asset  {
         let temp_new_translation = new_translation;
-        let new_translation = level_collision::fit_in_level(&level_asset, &game_state, transform.translation, new_translation);
+        let new_translation = level_collision::fit_in_level(&level_asset, game_state, transform.translation, new_translation);
         if temp_new_translation.x != new_translation.x {
             player.velocity.x = 0.0;
         }
@@ -205,7 +213,7 @@ pub fn move_non_player_controlled_kid(
 pub fn move_player_controlled_kid(
     mut player: &mut Player, 
     mut transform: &mut Transform, 
-    game_state: &Res<GameState>,
+    game_state: &ResMut<GameState>,
     settings: &Res<game_settings::GameSettings>,
     level_info_assets: &Res<Assets<asset_loader::LevelInfo>>,
     level_info_state: &Res<asset_loader::LevelInfoState>, 
@@ -235,7 +243,7 @@ pub fn move_player_controlled_kid(
         player.velocity *= settings.player_friction.powf(time.delta_seconds());
     }
 
-    player.velocity.clamp_length_max(settings.player_speed);
+    player.velocity = player.velocity.clamp_length_max(settings.player_speed);
     let new_translation = transform.translation + player.velocity;
 
     let levels_asset = level_info_assets.get(&level_info_state.handle);
@@ -266,6 +274,106 @@ pub fn move_player_controlled_kid(
     }
 }
 
+pub fn player_interact_check(
+    players: Query<(Entity, &Transform, &Player), Without<enemy::Enemy>>,
+    enemies: Query<(&Transform, &enemy::Enemy), Without<Player>>,
+    game_state: Res<GameState>,
+    mut follow_text_event_writer: EventWriter<follow_text::FollowTextEvent>,
+    mut sleep: Local<f32>,
+    time: Res<Time>, 
+) {
+    *sleep -= time.delta_seconds();
+    if *sleep > 0.0 {
+        return;
+    }
+
+    let mut text = None;
+    let mut entity = None;
+
+    // TODO: need to do something when there is only one player left?
+    for (player_entity, player_transform, player) in players.iter() {
+        if player.kid != game_state.controlling { continue; }
+
+        entity = Some(player_entity);
+
+        for (enemy_transform, enemy) in enemies.iter() {
+            match enemy.enemy_spawn.enemy_type {
+                enemy::EnemyType::Ticket(actually_checks) => {
+                    if player_transform.translation.distance(enemy_transform.translation) <= DISTRACT_DISTANCE
+                    && !enemy.is_distracted
+                    && (!actually_checks || game_state.has_ticket.contains(&player.kid)) {
+                        text = Some(DISTRACT_TEXT);
+                    }
+                },
+                _ => ()
+            }
+
+        }
+    }
+
+    if let Some(entity) = entity {
+        follow_text_event_writer.send(
+            follow_text::FollowTextEvent {
+                entity: entity,
+                value: text.unwrap_or("").to_string(),
+                is_player: true,
+                force: true
+            }
+        );
+    }
+
+    *sleep = 1.0;
+}
+
+pub struct DistractEvent {
+    is_starting: bool
+}
+
+pub fn handle_distract_event(
+    mut distract_event_reader: EventReader<DistractEvent>,
+    mut enemies: Query<(Entity, &mut enemy::Enemy, &Transform)>,
+    mut players: Query<(&mut Player, &Transform)>,
+    mut follow_text: ResMut<follow_text::FollowText>,
+    mut game_state: ResMut<GameState>,
+) {
+    for event in distract_event_reader.iter() {
+        println!("Got event");
+        for (mut player, player_transform) in players.iter_mut() {
+            if player.kid == game_state.controlling {
+                println!("Got player");
+                for (entity, mut enemy, enemy_transform) in enemies.iter_mut() {
+                    println!("checking enemy");
+                    if enemy_transform.translation.distance(player_transform.translation) < DISTRACT_DISTANCE {
+                        println!("found enemy nearby");
+                        if event.is_starting {
+                            println!("Setting enemy distracted");
+                            enemy.is_distracted = true;
+                            player.is_distracting = Some(entity);
+
+                            // SWITCH LOGIC
+                            game_state.controlling = 
+                                match game_state.controlling {
+                                    Kid::A => Kid::B,
+                                    Kid::B => Kid::C,
+                                    Kid::C => Kid::D,
+                                    Kid::D => Kid::A,
+                                };
+                            player.velocity = Vec3::default();
+
+                            follow_text.player_value = "".to_string();
+                            player.movement = None;
+                        } else {
+                            println!("Setting enemy not distracted");
+                            enemy.is_distracted = false;
+                            player.is_distracting = None;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub fn player_input(
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>, 
@@ -280,6 +388,8 @@ pub fn player_input(
     axes: Res<Axis<GamepadAxis>>,
     buttons: Res<Input<GamepadButton>>,
     gamepad: Option<Res<game_controller::GameController>>,
+    mut follow_text: ResMut<follow_text::FollowText>,
+    mut distract_event_writer: EventWriter<DistractEvent>,
 ) {
     let time_buffer = 100;
 
@@ -334,7 +444,7 @@ pub fn player_input(
         }
 
         if keyboard_input.just_pressed(KeyCode::K) || pressed_buttons.contains(&game_controller::GameButton::Switch) {
-            println!("Pressed K");
+            // SWITCH LOGIC
             game_state.controlling = 
                 match game_state.controlling {
                     Kid::A => Kid::B,
@@ -343,7 +453,22 @@ pub fn player_input(
                     Kid::D => Kid::A,
                 };
             player.velocity = Vec3::default();
+
+            follow_text.player_value = "".to_string();
             player.movement = None;
+
+
+            distract_event_writer.send(DistractEvent {
+                is_starting: false,
+            });
+        }
+
+        if keyboard_input.just_pressed(KeyCode::J) || pressed_buttons.contains(&game_controller::GameButton::Action) {
+            if follow_text.player_value == DISTRACT_TEXT {
+                distract_event_writer.send(DistractEvent {
+                    is_starting: true,
+                });
+            }
         }
 
         let mut move_dir = None;
@@ -377,36 +502,5 @@ pub fn player_input(
         }
 
         player.movement = move_dir;
-
-//      if movement_got_set {
-//          squash_queue.squashes.clear();
-
-//          // squashes are done in reverse
-//          squash_queue.squashes.push(Squash {
-//              start_scale: Vec3::new(0.7, 1.4, 1.0),
-//              target_scale: Vec3::new(1.0, 1.0, 1.0),
-//              start_vertical: 2.5,
-//              target_vertical: 1.0,
-//              start_horizontal: 0.0,
-//              target_horizontal: 0.0,
-//              current_scale_time: 0.0,
-//              finish_scale_time: 0.20,
-//          });
-//          squash_queue.squashes.push(Squash {
-//              start_scale: Vec3::new(1.0, 1.0, 1.0),
-//              target_scale: Vec3::new(0.7, 1.4, 1.0),
-//              start_vertical: 1.0,
-//              target_vertical: 2.5,
-//              start_horizontal: 0.0,
-//              target_horizontal: 0.0,
-//              current_scale_time: 0.0,
-//              finish_scale_time: 0.05,
-//          });
-
-//          create_dust_event_writer.send(dust::CreateDustEvent { 
-//              position: Position::from_vec(transform.translation),
-//              move_away_from: move_dir,
-//          });
-//      }
     }
 }

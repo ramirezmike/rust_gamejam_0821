@@ -24,6 +24,8 @@ impl Plugin for LobbyPlugin {
                 SystemSet::on_update(crate::AppState::Lobby)
                     .with_system(debug_in_lobby.system())
                     .with_system(player::player_input.system())
+                    .with_system(player::handle_distract_event.system())
+                    .with_system(level_collision::ticket_checker.system())
                     .with_system(check_for_level_exit.system())
                     .with_system(player::player_movement_update.system())
                     .with_system(listen_for_level_reset.system())
@@ -58,7 +60,7 @@ fn reset_level(
 }
 
 struct Lobby {}
-fn load_level( 
+fn load_level(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -205,34 +207,49 @@ fn cleanup_environment(
 }
 
 pub fn check_for_level_exit(
-    player: Query<&Transform, With<player::Player>>,
+    mut commands: Commands,
+    players: Query<(Entity, &Transform, &player::Player)>,
     level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
     level_info_state: Res<asset_loader::LevelInfoState>, 
     mut current_cutscene: ResMut<cutscene::CurrentCutscene>,
-    game_state: Res<GameState>,
+    mut game_state: ResMut<GameState>,
     mut state: ResMut<State<AppState>>,
 ) {
     let levels_asset = level_info_assets.get(&level_info_state.handle);
     if let Some(level_asset) = levels_asset  {
-        for player in player.iter() {
+        let number_of_players = players.iter().len();
+        for (entity, transform, player) in players.iter() {
             for (level, shape) in level_asset.collision_info.shapes.iter() {
                 if *level == game_state.current_level {
                     match shape {
-                        level_collision::CollisionShape::LevelSwitch((r, _)) => {
-                            if player.translation.x >= r.bottom_x 
-                            && player.translation.x <= r.top_x 
-                            && player.translation.z <= r.right_z
-                            && player.translation.z >= r.left_z {
-                                println!("Level switch triggered!");
-                                current_cutscene.trigger(
-                                    vec!(
-                                        //cutscene::CutsceneSegment::CameraPosition((Vec3::ZERO, Quat::default(), 1.0)),
-                                        cutscene::CutsceneSegment::LevelSwitch(cutscene::Level::Movie),
-                                    ),
-                                    cutscene::Level::Lobby
-                                );
+                        level_collision::CollisionShape::DespawnPlayer((r, cancel_position)) => {
+                            if transform.translation.x >= r.bottom_x 
+                            && transform.translation.x <= r.top_x 
+                            && transform.translation.z <= r.right_z
+                            && transform.translation.z >= r.left_z {
+                                if number_of_players <= 1 {
+                                    println!("Level switch triggered!");
+                                    current_cutscene.trigger(
+                                        vec!(
+                                            //cutscene::CutsceneSegment::CameraPosition((Vec3::ZERO, Quat::default(), 1.0)),
+                                            cutscene::CutsceneSegment::LevelSwitch(cutscene::Level::Movie),
+                                        ),
+                                        cutscene::Level::Lobby
+                                    );
 
-                                state.push(AppState::Cutscene).unwrap();
+                                    state.push(AppState::Cutscene).unwrap();
+                                } else {
+                                    commands.entity(entity).despawn_recursive();
+                                    game_state.last_positions.insert(player.kid, None);
+                                    game_state.controlling = game_state.last_positions
+                                                                       .iter()
+                                                                       .filter(|(_key, value)| !value.is_none())
+                                                                       .map(|(key, _)| key)
+                                                                       .last()
+                                                                       .unwrap()
+                                                                       .clone();
+                                }
+
                             }
                         }
                         _ => ()

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{player, asset_loader, theater_outside, GameState, level_collision, cutscene, AppState, follow_text::FollowTextEvent};
+use crate::{player, asset_loader, theater_outside, GameState, level_collision, cutscene, AppState, follow_text::FollowTextEvent, get_colors};
 use bevy::render::pipeline::PrimitiveTopology;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
@@ -17,18 +17,19 @@ pub static FRICTION: f32 = 0.1;
 #[derive(Debug, Clone, Deserialize, TypeUuid)]
 #[uuid = "31c0df2d-8f17-4ed3-906f-e4e7ca870c2f"]
 pub struct EnemySpawnPoint {
-    level: cutscene::Level,
-    location: Vec2,
-    enemy_type: EnemyType,
-    facing: crate::Direction,
+    pub level: cutscene::Level,
+    pub location: Vec2,
+    pub enemy_type: EnemyType,
+    pub facing: crate::Direction,
 }
 
 #[derive(Debug, Clone, Deserialize, TypeUuid, PartialEq)]
 #[uuid = "a3da668c-fa5c-402d-ab4f-edf62690827e"]
 pub enum EnemyType {
-    Ticket,
+    Ticket(bool),
     Patrol(Vec::<Vec2>),
     Mom,
+    Camera,
     Dog
 }
 
@@ -91,12 +92,17 @@ pub fn spawn_enemies(
     level_info_state: Res<asset_loader::LevelInfoState>, 
     level_info_assets: ResMut<Assets<asset_loader::LevelInfo>>,
 ) {
-    let color = Color::hex("FF00FF").unwrap(); 
-    let color2 = Color::hex("FFFF00").unwrap(); 
+    let leg_color = Color::hex("293241").unwrap(); 
+    let torso_color = Color::hex("e63946").unwrap(); 
+    let hat_color = Color::hex("e63946").unwrap();
+    let other_colors = get_colors();
+    let vision_color = Color::hex("fdffb6").unwrap();
 
     if let Some(levels_asset) = level_info_assets.get(&level_info_state.handle) {
         for enemy_spawn in levels_asset.enemies.iter() {
             if enemy_spawn.level != game_state.current_level { continue; }
+
+            let skin_color = Color::hex(other_colors.skin.to_string()).unwrap();
 
             let mut transform = Transform::from_translation(Vec3::new(enemy_spawn.location.x as f32, 
                                                                       0.0 as f32, 
@@ -114,27 +120,28 @@ pub fn spawn_enemies(
                         target_waypoint: 0,
                         velocity: Vec3::default(),
                         is_patroling: true,
+                        is_distracted: false,
                         enemy_spawn: enemy_spawn.clone()
                     })
                     .with_children(|parent|  {
                         parent.spawn_bundle(PbrBundle {
                             mesh: theater_meshes.legs.clone(),
-                            material: materials.add(color.into()),
+                            material: materials.add(leg_color.into()),
                             ..Default::default()
                         });
                         parent.spawn_bundle(PbrBundle {
                             mesh: theater_meshes.torso.clone(),
-                            material: materials.add(color.into()),
+                            material: materials.add(torso_color.into()),
                             ..Default::default()
                         });
                         parent.spawn_bundle(PbrBundle {
                             mesh: theater_meshes.headhand.clone(),
-                            material: materials.add(color.into()),
+                            material: materials.add(skin_color.into()),
                             ..Default::default()
                         });
                         parent.spawn_bundle(PbrBundle {
                             mesh: theater_meshes.hat.clone(),
-                            material: materials.add(color.into()),
+                            material: materials.add(hat_color.into()),
                             ..Default::default()
                         });
                         parent.spawn_bundle(PbrBundle {
@@ -145,7 +152,7 @@ pub fn spawn_enemies(
 
                         match enemy_spawn.enemy_type {
                             EnemyType::Patrol(_) => {
-                                let color = Color::rgba(color2.r(), color2.g(), color2.b(), 0.7);
+                                let color = Color::rgba(vision_color.r(), vision_color.g(), vision_color.b(), 0.7);
 
                                 parent.spawn_bundle(PbrBundle {
                                     mesh: enemy_meshes.fov_cone.clone(),
@@ -171,15 +178,24 @@ pub fn spawn_enemies(
 }
 
 pub fn update_enemy(
-    mut enemies: Query<(&mut Transform, &mut Enemy)>, 
+    mut enemies: Query<(Entity, &mut Transform, &mut Enemy)>, 
     time: Res<Time>,
-    game_state: Res<GameState>,
+    mut game_state: ResMut<GameState>,
+    mut follow_text_event_writer: EventWriter<FollowTextEvent>,
     level_info_assets: Res<Assets<asset_loader::LevelInfo>>,
     level_info_state: Res<asset_loader::LevelInfoState>, 
 ) {
-    for (mut transform, mut enemy) in enemies.iter_mut() {
+    for (entity, mut transform, mut enemy) in enemies.iter_mut() {
         match &enemy.enemy_spawn.enemy_type {
             EnemyType::Patrol(waypoints) => {
+                // this is pretty bad but it lets me end the game easier
+                if enemy.target_waypoint >= waypoints.len() - 1
+                && game_state.current_level == cutscene::Level::Movie
+                && !game_state.has_avoided_movie_guard {
+                    game_state.has_avoided_movie_guard = true;
+                }
+
+                if game_state.has_avoided_movie_guard { return; }
 
                 let current_position = Vec2::new(transform.translation.x, transform.translation.z); 
                 if let Some(point) = waypoints.get(enemy.target_waypoint) {
@@ -197,9 +213,14 @@ pub fn update_enemy(
                         let move_toward = Vec3::new(move_toward.x, 0.0, move_toward.y);
 
                         enemy.velocity += (move_toward * SPEED) * time.delta_seconds();
-                        enemy.velocity.clamp_length_max(SPEED);
+                        enemy.velocity = enemy.velocity.clamp_length_max(SPEED);
+
                         if distance < 2.0 {
                             enemy.velocity *= FRICTION.powf(time.delta_seconds());
+                        }
+
+                        if game_state.current_level == cutscene::Level::Movie {
+                            enemy.velocity = enemy.velocity.clamp_length_max(SPEED / 2.0);
                         }
 
                         let new_translation = transform.translation + enemy.velocity;
@@ -221,6 +242,7 @@ pub fn update_enemy(
                             // wow, this actually works?
                             let angle = (-(new_translation.z - transform.translation.z)).atan2(new_translation.x - transform.translation.x);
                             let rotation = Quat::from_axis_angle(Vec3::Y, angle);
+
                             transform.translation = new_translation; 
 
                             let new_rotation = transform.rotation.lerp(rotation, time.delta_seconds());
@@ -232,7 +254,17 @@ pub fn update_enemy(
                          }
                     }
                 }
-            }
+            },
+            EnemyType::Ticket(_actually_checks) => {
+                if enemy.is_distracted {
+                    follow_text_event_writer.send(FollowTextEvent {
+                        entity,
+                        value: "I'm distracted!".to_string(),
+                        is_player: false,
+                        force: false,
+                    });
+                }
+            },
             _ => ()
         }
     }
@@ -277,29 +309,33 @@ pub fn check_for_player(
                 if axis.y >= -0.0 {
                     angle = -angle;
                 } 
-                let left_angle = angle - VIEW_ANGLE;
-                let right_angle = angle + VIEW_ANGLE;
+                let view_angle = if game_state.current_level == cutscene::Level::Movie {
+                                    0.1
+                                } else {
+                                    VIEW_ANGLE
+                                };
+                let left_angle = angle - view_angle;
+                let right_angle = angle + view_angle;
 
-                let left_vector = Vec2::new(left_angle.cos(), left_angle.sin()).normalize() * (VIEW_DISTANCE - 0.7);
-                let right_vector = Vec2::new(right_angle.cos(), right_angle.sin()).normalize() * (VIEW_DISTANCE - 0.7);
+                let view_distance = if game_state.current_level == cutscene::Level::Movie {
+                                        VIEW_DISTANCE - 2.7
+                                    } else {
+                                        VIEW_DISTANCE - 0.7
+                                    };
+                let left_vector = Vec2::new(left_angle.cos(), left_angle.sin()).normalize() * (view_distance);
+                let right_vector = Vec2::new(right_angle.cos(), right_angle.sin()).normalize() * (view_distance);
 
                 for p_transform in player.iter() {
                     let enemy_position = Vec2::new(transform.translation.x, transform.translation.z);
                     let player_position = Vec2::new(p_transform.translation.x, p_transform.translation.z);
                     let triangle: (Vec2, Vec2, Vec2) = (enemy_position, enemy_position + left_vector, enemy_position + right_vector); 
                     if point_in_triangle(player_position, triangle) {
-                        let color2 = Color::hex("FF0000").unwrap(); 
-                        let color = Color::rgba(color2.r(), color2.g(), color2.b(), 0.7);
-                        for child in children.iter() {
-                            if let Ok(mut cone_material) = cones.get_mut(*child) {
-                                *cone_material = materials.add(color.into());
-                            }
-                        }
 
                         follow_text_event_writer.send(FollowTextEvent {
                             entity,
                             value: "Hey!".to_string(),
                             is_player: false,
+                            force: true,
                         });
 
                         current_cutscene.trigger(
@@ -313,20 +349,12 @@ pub fn check_for_player(
                             
 //                        println!("TRUE {:?} {:?}", player_position, triangle);
                     } else {
-                        let color2 = Color::hex("FFFF00").unwrap(); 
-                        let color = Color::rgba(color2.r(), color2.g(), color2.b(), 0.7);
-                        for child in children.iter() {
-                            if let Ok(mut cone_material) = cones.get_mut(*child) {
-                                *cone_material = materials.add(color.into());
-                            }
-                        }
                     }
                 }
                 //println!("Angle: {} {}", axis, angle);
             },
             _ => ()
         }
-
     }
 }
 
@@ -357,8 +385,9 @@ pub fn print(
 }
 
 pub struct Enemy {
-    enemy_spawn: EnemySpawnPoint,
-    target_waypoint: usize,
-    is_patroling: bool,
-    velocity: Vec3,
+    pub enemy_spawn: EnemySpawnPoint,
+    pub target_waypoint: usize,
+    pub is_patroling: bool,
+    pub velocity: Vec3,
+    pub is_distracted: bool,
 }

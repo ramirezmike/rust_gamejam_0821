@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{enemy, cutscene, player, theater_outside, asset_loader, camera, level_collision, GameState, Mode, Kid, };
+use crate::{enemy, cutscene, player, theater_outside, asset_loader, camera, level_collision, GameState, Mode, Kid, AppState,};
 
 /*
 camera_x: -11.483573,
@@ -37,7 +37,67 @@ impl Plugin for MoviePlugin {
                    // .with_system(check_for_level_exit.system())
                     .with_system(player::player_movement_update.system())
                     .with_system(listen_for_level_reset.system())
+                    .with_system(move_enemy_into_movie.system())
             );
+    }
+}
+
+fn move_enemy_into_movie(
+    mut commands: Commands,
+    game_state: Res<GameState>,
+    mut state: ResMut<State<AppState>>,
+    mut current_cutscene: ResMut<cutscene::CurrentCutscene>,
+    mut enemies: Query<(Entity, &mut Transform), With<enemy::Enemy>>,
+    level_mesh: Query<Entity, With<Movie>>,
+    player: Query<Entity, With<player::Player>>,
+    camera: Query<Entity, With<camera::MainCamera>>,
+    collision_meshes: Query<Entity, With<level_collision::DebugLevelCollisionMesh>>, 
+) {
+    if !game_state.has_seen_half_of_movie { return; }
+
+    for (_, mut transform) in enemies.iter_mut() {
+        if transform.translation.x == -100.0 && transform.translation.z == -100.0 {
+            transform.translation.x = 0.0;
+            transform.translation.z = -9.0;
+        }
+    }
+
+
+    if game_state.has_avoided_movie_guard { 
+
+        // I don't know why but this isn't working but it works if I do this here 
+
+        // trigger ending
+        for (entity, _) in enemies.iter_mut() {
+            commands.entity(entity).despawn_recursive();
+        }
+
+        for entity in level_mesh.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
+
+        for entity in player.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
+
+
+        // TODO (and also in lobby)
+    //  for entity in camera.iter() {
+    //      commands.entity(entity).despawn_recursive();
+    //  }
+
+        for entity in collision_meshes.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
+
+        current_cutscene.trigger(
+            vec!(
+                cutscene::CutsceneSegment::Textbox("Wow, that was close!".to_string()),
+                cutscene::CutsceneSegment::LevelSwitch(cutscene::Level::Outside),
+            ),
+            cutscene::Level::Movie
+        );
+        state.push(AppState::Cutscene).unwrap();
     }
 }
 

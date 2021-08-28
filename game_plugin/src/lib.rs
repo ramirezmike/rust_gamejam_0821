@@ -6,6 +6,7 @@ use bevy::reflect::{TypeUuid};
 use bevy::window::WindowMode;
 use serde::Deserialize;
 use std::collections::HashMap;
+use rand::seq::SliceRandom;
 
 mod camera;
 pub mod asset_loader;
@@ -50,8 +51,37 @@ pub enum AppState {
 
 pub struct GamePlugin;
 
+pub fn get_colors(
+) -> Colors { 
+    let mut skin_colors = vec!("fefae0", "b08968", "e6ccb2", "7f5539", "c49e85");
+    let mut leg_colors = vec!("788aa3", "b2c9ab", "8e9aaf", "ccd5ae");
+    let mut torso_colors = vec!("e8e8e4", "efe9ae", "a8dadc", "caffbf", "43aa8b", "006d77", "ef476f");
+    let mut hair_colors = vec!("ebcfb2", "424b54", "81583a", "bb4d73", "ff9100");
+
+    let mut rng = rand::thread_rng();
+    skin_colors.shuffle(&mut rng);
+    leg_colors.shuffle(&mut rng);
+    torso_colors.shuffle(&mut rng);
+    hair_colors.shuffle(&mut rng);
+
+    let mut rng = rand::thread_rng();
+    let mut nums: Vec<i32> = (0..1).collect();
+    nums.shuffle(&mut rng);
+    let is_long_hair = *nums.last().unwrap() == 0;
+
+    Colors {
+        legs: leg_colors.last().unwrap().to_string(),
+        torso: torso_colors.last().unwrap().to_string(),
+        skin: skin_colors.last().unwrap().to_string(),
+        hair: hair_colors.last().unwrap().to_string(),
+        is_long_hair
+    }
+}
+
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut AppBuilder) {
+
+
         app.add_plugins(DefaultPlugins)
 //         .add_plugin(DebugLinesPlugin)
            .init_resource::<menu::ButtonMaterials>()
@@ -59,6 +89,7 @@ impl Plugin for GamePlugin {
            .init_resource::<follow_text::FollowText>()
            .add_event::<ChangeStateEvent>()
            .add_event::<LevelResetEvent>()
+           .add_event::<player::DistractEvent>()
            .add_event::<follow_text::FollowTextEvent>()
 
            .init_resource::<player::PersonMeshes>()
@@ -115,6 +146,7 @@ impl Plugin for GamePlugin {
            .add_system(handle_level_reset_event.system())
            .add_system(follow_text::update_follow_text.system())
            .add_system(follow_text::handle_follow_text_event.system())
+           .add_system(player::player_interact_check.system())
            .add_plugin(theater_outside::TheaterOutsidePlugin)
            .add_plugin(lobby::LobbyPlugin)
            .add_plugin(movie::MoviePlugin)
@@ -129,7 +161,17 @@ impl Plugin for GamePlugin {
                current_level: cutscene::Level::Outside,
                mode: Mode::Follow,
                controlling: Kid::A,
-               last_positions: HashMap::new()
+               last_positions: HashMap::new(),
+               kid_colors: [
+                   (Kid::A, get_colors()),
+                   (Kid::B, get_colors()),
+                   (Kid::C, get_colors()),
+                   (Kid::D, get_colors()),
+               ].iter().cloned().collect(),
+               has_ticket: vec!(),
+               has_seen_half_of_movie: false,
+               has_avoided_movie_guard: false,
+               game_is_done: false,
            })
            .add_asset::<asset_loader::LevelInfo>()
            .init_asset_loader::<asset_loader::LevelsAssetLoader>()
@@ -144,7 +186,21 @@ pub struct GameState {
     pub current_level: cutscene::Level,
     pub mode: Mode, 
     pub controlling: Kid,
-    pub last_positions: HashMap<Kid, Option::<Vec3>>
+    pub last_positions: HashMap<Kid, Option::<Vec3>>,
+    pub kid_colors: HashMap<Kid, Colors>,
+    pub has_ticket: Vec::<Kid>,
+    pub has_seen_half_of_movie: bool,
+    pub has_avoided_movie_guard: bool,
+    pub game_is_done: bool,
+}
+
+#[derive(Clone, PartialEq, Hash, Eq, Debug)]
+pub struct Colors {
+    pub legs: String,
+    pub torso: String,
+    pub skin: String,
+    pub hair: String,
+    pub is_long_hair: bool
 }
 
 #[derive(Copy, Clone, PartialEq, Hash, Eq, Debug)]
@@ -269,26 +325,39 @@ pub fn handle_change_state_event(
 
 pub fn handle_level_reset_event(
     mut level_reset_event_reader: EventReader<LevelResetEvent>,
-    mut players: Query<(&mut player::Player, &mut Transform)>,
+    mut players: Query<(&mut player::Player, &mut Transform), Without<enemy::Enemy>>,
+    mut enemies: Query<(&mut enemy::Enemy, &mut Transform), Without<player::Player>>,
     mut follow_text: ResMut<follow_text::FollowText>,
-    game_state: Res<GameState>,
+    mut game_state: ResMut<GameState>,
 ) {
     for _ in level_reset_event_reader.iter() {
         for (mut player, mut transform) in players.iter_mut() {
             transform.translation = game_state.last_positions[&player.kid].unwrap_or(transform.translation);
+
             player.velocity = Vec3::default();
             player.movement = None;
+            player.is_distracting = None;
+
+            game_state.has_ticket = vec!();
             follow_text.lock = 0.0;
+        }
+        for (mut enemy, mut transform) in enemies.iter_mut() {
+            enemy.is_distracted = false;
+            if game_state.current_level == cutscene::Level::Movie {
+                transform.translation.x = 0.0;
+                transform.translation.z = -9.0;
+                enemy.target_waypoint = 0;
+            }
         }
     }
 }
 
 pub fn debug_move_entity(
     keyboard_input: Res<Input<KeyCode>>,
-    mut entities: Query<&mut Transform, With<player::Player>>,
+    mut entities: Query<&mut Transform, With<cutscene::DebugCharacterMarker>>,
     time: Res<Time>,
 ) {
-    return;
+      return;
     for mut transform in entities.iter_mut() {
         if keyboard_input.pressed(KeyCode::Left) {
             transform.translation.z -= 0.1; 

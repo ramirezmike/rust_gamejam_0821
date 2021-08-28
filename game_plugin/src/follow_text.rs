@@ -6,7 +6,8 @@ use crate::{camera, player, GameState};
 pub struct FollowTextEvent {
     pub entity: Entity,
     pub value: String,
-    pub is_player: bool
+    pub is_player: bool,
+    pub force: bool,
 }
 
 #[derive(Default)]
@@ -28,9 +29,11 @@ pub fn handle_follow_text_event(
         if event.is_player {
             follow_text.player_value = event.value.clone();
         } else {
-            follow_text.entity = Some(event.entity);
-            follow_text.value = event.value.clone();
-            follow_text.lock = 3.0;
+            if event.force || follow_text.lock <= 0.0 {
+                follow_text.entity = Some(event.entity);
+                follow_text.value = event.value.clone();
+                follow_text.lock = 3.0;
+            }
         }
     }
 }
@@ -154,7 +157,7 @@ pub fn create_follow_text(
                 "".to_string(),
                 TextStyle {
                     font: font.clone(),
-                    font_size: 50.0,
+                    font_size: 30.0,
                     color: Color::WHITE,
                 },
                 TextAlignment {

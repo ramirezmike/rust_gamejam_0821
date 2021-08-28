@@ -100,9 +100,12 @@ pub fn check_for_level_exit(
                                 && transform.translation.z <= r.right_z
                                 && transform.translation.z >= r.left_z {
                                     println!("Level switch triggered!");
+                                    let camera_rotation =
+                                        Quat::from_axis_angle(Vec3::new(-0.020942269, -0.9995644, -0.020797854), 1.5643123);
+
                                     current_cutscene.trigger(
                                         vec!(
-                                            //CutsceneSegment::CameraPosition((Vec3::ZERO, Quat::default(), 1.0)),
+                                            CutsceneSegment::CameraPosition((Vec3::new(8.684685, 1.7965136, -0.079336877), camera_rotation, 1.0)),
                                             CutsceneSegment::LevelSwitch(cutscene::Level::Lobby),
                                         ),
                                         cutscene::Level::Outside

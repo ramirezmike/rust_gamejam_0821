@@ -64,13 +64,18 @@ fn update_camera(
         for (_e, _camera, transform) in cameras.iter_mut() {
             let translation = transform.translation;
             let (rotation, axis) = transform.rotation.to_axis_angle();
-            println!("camera_x: {:?},", translation.x); 
-            println!("camera_y: {:?},", translation.y); 
-            println!("camera_z: {:?},", translation.z); 
-            println!("camera_rotation_x: {:?},", rotation.x); 
-            println!("camera_rotation_y: {:?},", rotation.y); 
-            println!("camera_rotation_z: {:?},", rotation.z); 
-            println!("camera_rotation_angle: {:?},", axis); 
+                                
+            println!("), Some(CameraPosition (");
+            println!("x: {:?},", translation.x); 
+            println!("y: {:?},", translation.y); 
+            println!("z: {:?},", translation.z); 
+            println!("rotation_x: {:?},", rotation.x); 
+            println!("rotation_y: {:?},", rotation.y); 
+            println!("rotation_z: {:?},", rotation.z); 
+            println!("rotation_angle: {:?},", axis); 
+            println!("speed: 1.8,"); 
+            println!("))))),");
+
         }
     }
 
@@ -86,7 +91,11 @@ fn update_camera(
                 for (level, shape) in level_asset.collision_info.shapes.iter() {
                     if *level == game_state.current_level {
                         match shape {
-                            CollisionShape::Rect((r, c)) => {
+                            CollisionShape::Rect((r, c)) 
+                          //| CollisionShape::LevelSwitch((r, c)) 
+                          | CollisionShape::TicketCheck((r, c)) 
+                          | CollisionShape::GetTicket((r, c)) => {
+
                                 if let Some(c) = c {
                                     if transform.translation.x >= r.bottom_x 
                                     && transform.translation.x <= r.top_x 
