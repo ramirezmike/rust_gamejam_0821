@@ -2,7 +2,7 @@
 
 A 3D stealth game made in Rust using the awesome [Bevy engine][bevy]. It can be played [here][itch].
 
-This game was made in a week as a submission for the [Rusty Jam][rustyjam] game jam. Check out and rate the submissions [here](submissions)!
+This game was made in a week as a submission for the [Rusty Jam][rustyjam] game jam. Check out and rate the submissions [here][submissions]!
 
 There is *a lot* that can be improved in this code base and I strongly advise anyone wanting to learn from this code to keep the above in mind. Again, this project was made in just 7 days, so a lot of shortcuts were taken.
 
