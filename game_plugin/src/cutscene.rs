@@ -3,7 +3,8 @@ use bevy::app::AppExit;
 use bevy::app::Events;
 use serde::Deserialize;
 use bevy::reflect::{TypeUuid};
-use crate::{player,asset_loader,AppState, game_controller, camera, ChangeStateEvent, GameState, LevelResetEvent, Kid, theater_outside, Mode};
+use crate::{player,asset_loader,AppState, game_controller, camera, ChangeStateEvent, GameState, 
+            LevelResetEvent, Kid, theater_outside, Mode, BlipEvent};
 
 pub struct CutsceneEvent {
 }
@@ -530,12 +531,14 @@ pub fn handle_speechbox_event(
     mut speechbox_event_reader: EventReader<SpeechBoxEvent>, 
     mut textbox_visibility: Query<&mut Visible, With<SpeechBox>>,
     mut textbox_text: Query<&mut Text, With<SpeechText>>,
+    mut handle_blip_event_writer: EventWriter<BlipEvent>,
 ) {
     for event in speechbox_event_reader.iter() {
         if let Some(text_to_display) = &event.text {
             println!("Got event to show textbox");
             for mut textbox_text in textbox_text.iter_mut() {
                 textbox_text.sections[0].value = text_to_display.to_string();
+                handle_blip_event_writer.send(BlipEvent { blip_count: text_to_display.matches(" ").count() + 1 });
             }
             for mut visibility in textbox_visibility.iter_mut() {
                 visibility.is_visible = true;
@@ -547,6 +550,7 @@ pub fn handle_speechbox_event(
             for mut visibility in textbox_visibility.iter_mut() {
                 visibility.is_visible = false;
             }
+            handle_blip_event_writer.send(BlipEvent { blip_count: 0 });
         }
     }
 }

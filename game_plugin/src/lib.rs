@@ -6,6 +6,7 @@ use bevy::reflect::{TypeUuid};
 use bevy::window::WindowMode;
 use serde::Deserialize;
 use std::collections::HashMap;
+use bevy_kira_audio::{AudioChannel, Audio, AudioPlugin, AudioSource};
 use rand::seq::SliceRandom;
 
 mod camera;
@@ -29,6 +30,9 @@ mod theater_outside;
 use camera::*;
 
 pub static COLOR_BLACK: &str = "000000";
+pub struct BlipEvent {
+    blip_count: usize
+}
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum AppState {
@@ -83,6 +87,7 @@ impl Plugin for GamePlugin {
 
         app.add_plugins(DefaultPlugins)
 //         .add_plugin(DebugLinesPlugin)
+           .add_plugin(AudioPlugin)
            .init_resource::<menu::ButtonMaterials>()
            .init_resource::<asset_loader::LevelInfoState>()
            .init_resource::<follow_text::FollowText>()
@@ -90,6 +95,7 @@ impl Plugin for GamePlugin {
            .add_event::<LevelResetEvent>()
            .add_event::<player::DistractEvent>()
            .add_event::<follow_text::FollowTextEvent>()
+           .add_event::<BlipEvent>()
 
            .init_resource::<player::PersonMeshes>()
            .add_event::<credits::CreditsEvent>()
@@ -143,6 +149,7 @@ impl Plugin for GamePlugin {
            .add_system(handle_change_state_event.system())
            .add_system(debug_move_entity.system())
            .add_system(handle_level_reset_event.system())
+           .add_system(handle_blip_event.system())
            .add_system(follow_text::update_follow_text.system())
            .add_system(follow_text::handle_follow_text_event.system())
            .add_system(player::player_interact_check.system())
@@ -321,6 +328,39 @@ pub fn handle_change_state_event(
         println!("Setting state change");
         *queued_state_change = Some(event.target.clone());
         *delay = 0.01;
+    }
+}
+
+// this function really is setup just to quickly play
+// the one sound added to this game. This isn't a scalable pattern
+pub fn handle_blip_event(
+    mut current_blip_count: Local<usize>,
+    mut blip_event_reader: EventReader<BlipEvent>,
+    asset_server: Res<AssetServer>, 
+    mut blip_handle: Local<Option::<Handle<AudioSource>>>,
+    audio: Res<Audio>,
+    time: Res<Time>,
+    mut blip_buffer: Local<f32>,
+) {
+    for event in blip_event_reader.iter() {
+        *current_blip_count = event.blip_count;
+    }
+
+    *blip_buffer -= time.delta_seconds();
+
+    if *blip_buffer < 0.0 {
+        *blip_buffer = 0.10;
+
+        if *current_blip_count > 0 {
+            *current_blip_count -= 1;
+            if blip_handle.is_none() {
+                *blip_handle = Some(asset_server.load("sounds/blip.wav"));
+            }
+
+            //audio.play(blip_handle.as_ref().unwrap().clone());
+        } else {
+            *current_blip_count = 0;
+        }
     }
 }
 

@@ -59,6 +59,7 @@ pub struct TheaterMeshes {
     pub lobby_concession: Handle<Mesh>,
     pub lobby_desk: Handle<Mesh>,
     pub lobby_material: Handle<StandardMaterial>,
+    pub railing_material: Handle<StandardMaterial>,
 
     pub movie: Handle<Mesh>,
     pub movie_material: Handle<StandardMaterial>,
@@ -275,8 +276,14 @@ fn load_assets(
         ..Default::default()
     });
 
+    let texture_handle = asset_server.load("models/railing.png");
+    theater_meshes.railing_material = materials.add(StandardMaterial {
+        base_color_texture: Some(texture_handle.clone()),
+        ..Default::default()
+    });
+
     let texture_handle = asset_server.load("models/movie.png");
-    theater_meshes.lobby_material = materials.add(StandardMaterial {
+    theater_meshes.movie_material = materials.add(StandardMaterial {
         base_color_texture: Some(texture_handle.clone()),
         ..Default::default()
     });
@@ -317,11 +324,8 @@ fn load_assets(
     loading.asset_handles.push(theater_meshes.kid_hairtwo.clone_untyped());
     loading.asset_handles.push(theater_meshes.kid_face.clone_untyped());
 
-
-
     level_info_state.handle = asset_server.load("data/outside.lvl");
     asset_server.watch_for_changes().unwrap();
-
 }
 
 fn listen_for_level_reset(

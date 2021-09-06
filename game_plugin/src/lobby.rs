@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::{enemy, cutscene, player, theater_outside, asset_loader, camera, level_collision, GameState, AppState, Mode, Kid, };
+use bevy_kira_audio::{AudioChannel, Audio, AudioPlugin};
 
 pub struct LobbyPlugin;
 impl Plugin for LobbyPlugin {
@@ -11,10 +12,12 @@ impl Plugin for LobbyPlugin {
                     .with_system(crate::camera::create_camera.system().after("loading_level"))
                     .with_system(set_clear_color.system().after("loading_level"))
                     .with_system(enemy::spawn_enemies.system().after("loading_level"))
+                    .with_system(play_music.system().after("loading_level"))
             )
             .add_system_set(
                 SystemSet::on_exit(crate::AppState::Lobby)
                     .with_system(cleanup_environment.system())
+                    .with_system(stop_music.system())
             )
             .add_system_set(
                 SystemSet::on_update(crate::AppState::ResetLobby)
@@ -36,6 +39,19 @@ impl Plugin for LobbyPlugin {
 fn debug_in_lobby(
 ) {
 
+}
+
+fn play_music(
+    asset_server: Res<AssetServer>, 
+    audio: Res<Audio>
+) {
+    audio.play_looped(asset_server.load("music/music.ogg"));
+}
+
+fn stop_music(
+    audio: Res<Audio>
+) {
+    audio.stop();
 }
 
 fn listen_for_level_reset(
@@ -114,19 +130,7 @@ fn load_level(
 
                 parent.spawn_bundle(PbrBundle {
                     mesh: theater_meshes.lobby_railing.clone(),
-                    //material: theater_meshes.lobby_material.clone(),
-                    transform: {
-                        let mut t = Transform::default();
-                        t.rotate(Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), std::f32::consts::PI));
-
-                        t
-                    },
-                    ..Default::default()
-                });
-
-                parent.spawn_bundle(PbrBundle {
-                    mesh: theater_meshes.lobby_railing.clone(),
-                    material: theater_meshes.lobby_material.clone(),
+                    material: theater_meshes.railing_material.clone(),
                     transform: {
                         let mut t = Transform::default();
                         t.rotate(Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), std::f32::consts::PI));
@@ -150,7 +154,7 @@ fn load_level(
 
                 parent.spawn_bundle(PbrBundle {
                     mesh: theater_meshes.lobby_desk.clone(),
-                    material: theater_meshes.lobby_material.clone(),
+                    material: theater_meshes.railing_material.clone(),
                     transform: {
                         let mut t = Transform::default();
                         t.rotate(Quat::from_axis_angle(Vec3::new(0.0, 1.0, 0.0), std::f32::consts::PI));

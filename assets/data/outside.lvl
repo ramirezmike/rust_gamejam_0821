@@ -592,7 +592,7 @@ speed: 1.8,
                             (Lobby,
                                 DespawnPlayer((RectangleCollision(
                                     left_z: -50.7,
-                                    right_z: -46.7,
+                                    right_z: -30.7,
                                     top_x: 12.0,
                                     bottom_x: 10.0,
                                     base_height: 0.0,
@@ -1106,7 +1106,7 @@ Textbox("Shut up and hide!"),
         EnemySpawnPoint(
             level: Lobby,
             location: (10.4, 14.0),
-            enemy_type: Ticket(false),
+            enemy_type: Ticket(true),
             facing: Down,
         ),
         EnemySpawnPoint(
